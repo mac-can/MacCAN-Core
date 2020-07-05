@@ -40,7 +40,7 @@
                                  ts.tv_sec += (time_t)1; \
                              } } while(0)
 
-#define SIGNAL_WAIT_CONDITION(queue)  do{ msgQueue->wait.flag = true; \
+#define SIGNAL_WAIT_CONDITION(queue)  do{ queue->wait.flag = true; \
                                           assert(0 == pthread_cond_signal(&queue->wait.cond)); } while(0)
 #define WAIT_CONDITION_INFINITE(queue,res)  do{ queue->wait.flag = false; \
                                                 res = pthread_cond_wait(&queue->wait.cond, &queue->wait.mutex); } while(0)
