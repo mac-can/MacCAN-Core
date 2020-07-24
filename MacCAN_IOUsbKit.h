@@ -65,6 +65,11 @@ typedef struct msg_queue_t_ {
     } ovfl;
 } CANUSB_MsgQueue_t;
 
+typedef struct msg_pipe_t_ {
+    int fildes[2];
+    int flag;  /* Cesi n'est pas une pipe;) */
+} CANUSB_MsgPipe_t;
+
 typedef struct usb_buffer_t_ {
     UInt8 *data[2];
     UInt8 index;
@@ -75,9 +80,11 @@ typedef struct usb_pipe_t_ {
     UInt8 pipeRef;
     CANUSB_Handle_t handle;
     CANUSB_Buffer_t buffer;
-    CANUSB_Callback_t callback;
+    CANUSB_MsgPipe_t msgPipe;
     CANUSB_MsgQueue_t msgQueue;
     CANUSB_MsgParam_t ptrParam;
+    CANUSB_Callback_t callback;
+    UInt16 options;
     Boolean running;
 } CANUSB_UsbPipe_t;
 

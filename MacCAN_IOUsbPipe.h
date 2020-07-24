@@ -23,6 +23,11 @@
 
 #include "MacCAN_IOUsbKit.h"
 
+#define CANUSB_OPTION_RX_QUEUE  0x0000U
+#define CANUSB_OPTION_TX_QUEUE  0x0001U
+#define CANUSB_OPTION_MSG_PIPE  0x0010U
+#define CANUSB_OPTION_DEFAULT   CANUSB_OPTION_RX_QUEUE
+
 /* CAN API V3 compatible error codes */
 #define CANUSB_ERROR_OK  (0)
 #define CANUSB_ERROR_FULL  (-20)
@@ -36,10 +41,10 @@
 /* macro to set up a MacCAN pipe context */
 #define CANUSB_PIPE_CONTEXT(ptr,hnd,ref,cbk,para) \
                             do{ if (ptr) { \
-                                    ptr->handle = hnd; \
-                                    ptr->pipeRef = ref; \
-                                    ptr->callback = cbk; \
-                                    ptr->ptrParam = para; \
+                                    (ptr)->handle = hnd; \
+                                    (ptr)->pipeRef = ref; \
+                                    (ptr)->callback = cbk; \
+                                    (ptr)->ptrParam = para; \
                             } } while(0)
 #define CANUSB_PIPE_RUNNING(pipe)  pipe.running
 #define CANUSB_QUEUE_OVERFLOW(pipe)  pipe.msgQueue.ovfl.flag
@@ -48,7 +53,7 @@
 extern "C" {
 #endif
 
-extern CANUSB_Return_t CANUSB_CreatePipe(CANUSB_UsbPipe_t *usbPipe, size_t bufferSize, size_t numElem, size_t elemSize);
+extern CANUSB_Return_t CANUSB_CreatePipe(CANUSB_UsbPipe_t *usbPipe, size_t bufferSize, size_t numElem, size_t elemSize, UInt16 options);
 
 extern CANUSB_Return_t CANUSB_DestroyPipe(CANUSB_UsbPipe_t *usbPipe);
 
@@ -58,8 +63,9 @@ extern CANUSB_Return_t CANUSB_Dequeue(CANUSB_UsbPipe_t *usbPipe, void *message, 
 
 extern CANUSB_Return_t CANUSB_ResetQueue(CANUSB_UsbPipe_t *usbPipe);
 
-// TODO: (1) transmission queue (the wait event is on the opposite side)
-// TODO: (2) Ceci n'est pas une pipe (to have a file descriptor for PCBUSB)
+extern CANUSB_Return_t CANUSB_WritePacket(CANUSB_UsbPipe_t *usbPipe, void const *buffer, size_t nbytes);
+
+extern CANUSB_Return_t CANUSB_ReadPacket(CANUSB_UsbPipe_t *usbPipe, void *buffer, size_t maxbytes, UInt16 timeout);
 
 #ifdef __cplusplus
 }

@@ -24,10 +24,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
+#include <errno.h>
+#include <limits.h>
+#include <assert.h>
+
+#include <sys/time.h>
+#include <sys/select.h>
+
+#define PIPI  0
+#define PIPO  1
 
 #define GET_TIME(ts)  do{ clock_gettime(CLOCK_REALTIME, &ts); } while(0)
 #define ADD_TIME(ts,to)  do{ ts.tv_sec += (time_t)(to / 1000U); \
@@ -50,22 +59,24 @@
 static Boolean EnqueueElement(CANUSB_MsgQueue_t *queue, const void *element);
 static Boolean DequeueElement(CANUSB_MsgQueue_t *queue, void *element);
 
-CANUSB_Return_t CANUSB_CreatePipe(CANUSB_UsbPipe_t *usbPipe, size_t bufferSize, size_t numElem, size_t elemSize) {
+CANUSB_Return_t CANUSB_CreatePipe(CANUSB_UsbPipe_t *usbPipe, size_t bufferSize, size_t numElem, size_t elemSize, UInt16 options) {
     CANUSB_Return_t retVal = CANUSB_ERROR_RESOURCE;
     
     if (usbPipe) {
         bzero(usbPipe, sizeof(CANUSB_UsbPipe_t));
+        usbPipe->msgPipe.fildes[PIPI] = (-1);
+        usbPipe->msgPipe.fildes[PIPO] = (-1);
         /* create a double buffer for USB data transfer */
-        MACCAN_DEBUG_DRIVER("        - Double buffer each of size %i bytes\n", bufferSize);
+        MACCAN_DEBUG_DRIVER("        - Double buffer each of size %u bytes\n", bufferSize);
         if ((usbPipe->buffer.data[0] = malloc(bufferSize)) &&
             (usbPipe->buffer.data[1] = malloc(bufferSize))) {
             usbPipe->buffer.size = (UInt32)bufferSize;
-            retVal = CANUSB_ERROR_OK;
         } else {
-            MACCAN_DEBUG_ERROR("+++ Unable to create double buffer (2 * %i bytes)\n", bufferSize);
+            MACCAN_DEBUG_ERROR("+++ Unable to create double buffer (2 * %u bytes)\n", bufferSize);
+            return CANUSB_ERROR_RESOURCE;
         }
         /* create a message queue for data exchange */
-        MACCAN_DEBUG_DRIVER("        - Message queue for %i elements of size %i bytes\n", numElem, elemSize);
+        MACCAN_DEBUG_DRIVER("        - Message queue for %u elements of size %u bytes\n", numElem, elemSize);
         bzero(&usbPipe->msgQueue, sizeof(CANUSB_MsgQueue_t));
         if ((usbPipe->msgQueue.queueElem = calloc(numElem, elemSize))) {
             if ((pthread_mutex_init(&usbPipe->msgQueue.wait.mutex, NULL) == 0) &&
@@ -74,13 +85,33 @@ CANUSB_Return_t CANUSB_CreatePipe(CANUSB_UsbPipe_t *usbPipe, size_t bufferSize, 
                 usbPipe->msgQueue.size = (UInt32)numElem;
                 usbPipe->msgQueue.wait.flag = false;
                 usbPipe->running = false;
-                retVal = CANUSB_ERROR_OK;
             }
         } else {
-            MACCAN_DEBUG_ERROR("+++ Unable to create message queue (%i * %i bytes)\n", numElem, elemSize);
+            MACCAN_DEBUG_ERROR("+++ Unable to create message queue (%u * %u bytes)\n", numElem, elemSize);
+            return CANUSB_ERROR_RESOURCE;
         }
+        /* open a message pipe for data exchange (optional) */
+        if (options & CANUSB_OPTION_MSG_PIPE) {
+            MACCAN_DEBUG_DRIVER("        - Message pipe of size %u bytes\n", PIPE_BUF);
+            if (pipe(usbPipe->msgPipe.fildes) < 0) {
+                MACCAN_DEBUG_ERROR("+++ Unable to open message pipe (errno=%i)\n", errno);
+                usbPipe->msgPipe.fildes[PIPI] = (-1);
+                usbPipe->msgPipe.fildes[PIPO] = (-1);
+                return CANUSB_ERROR_RESOURCE;
+            }
+            if (fcntl(usbPipe->msgPipe.fildes[PIPI], F_SETFL, O_NONBLOCK) < 0) {
+                MACCAN_DEBUG_ERROR("+++ Unable to open message pipe (errno=%i)\n", errno);
+                (void)close(usbPipe->msgPipe.fildes[PIPO]);
+                (void)close(usbPipe->msgPipe.fildes[PIPI]);
+                usbPipe->msgPipe.fildes[PIPO] = (-1);
+                usbPipe->msgPipe.fildes[PIPI] = (-1);
+                return CANUSB_ERROR_RESOURCE;
+            }
+        }
+        usbPipe->options = options;
+        retVal = CANUSB_ERROR_OK;
     } else {
-        MACCAN_DEBUG_ERROR("+++ Invalid pipe context given (NULL pointer)");
+        MACCAN_DEBUG_ERROR("+++ Invalid pipe context (NULL pointer)\n");
     }
     return retVal;
 }
@@ -99,11 +130,89 @@ CANUSB_Return_t CANUSB_DestroyPipe(CANUSB_UsbPipe_t *usbPipe) {
         if (usbPipe->buffer.data[0])
             free(usbPipe->buffer.data[0]);
         bzero(&usbPipe->buffer, sizeof(CANUSB_Buffer_t));
+        if (usbPipe->options & CANUSB_OPTION_MSG_PIPE) {
+            (void)close(usbPipe->msgPipe.fildes[PIPO]);
+            (void)close(usbPipe->msgPipe.fildes[PIPI]);
+        }
+        usbPipe->msgPipe.fildes[PIPO] = (-1);
+        usbPipe->msgPipe.fildes[PIPI] = (-1);
+        usbPipe->msgPipe.flag = 0;
         usbPipe->callback = NULL;
         /* note: an abort request can still pending */
         retVal = CANUSB_ERROR_OK;
     } else {
-        MACCAN_DEBUG_ERROR("+++ Invalid pipe context given (NULL pointer)");
+        MACCAN_DEBUG_ERROR("+++ Invalid pipe context (NULL pointer)\n");
+    }
+    return retVal;
+}
+
+CANUSB_Return_t CANUSB_WritePacket(CANUSB_UsbPipe_t *usbPipe, void const *buffer, size_t nbytes) {
+    UInt16 options = (usbPipe) ? usbPipe->options : CANUSB_OPTION_DEFAULT;
+    CANUSB_MsgPipe_t *msgPipe = (usbPipe) ? &usbPipe->msgPipe : NULL;
+    CANUSB_Return_t retVal = CANUSB_ERROR_RESOURCE;
+
+    if (buffer && msgPipe && (options & CANUSB_OPTION_MSG_PIPE)) {
+        ssize_t n = write(msgPipe->fildes[PIPO], buffer, nbytes);
+        if (n < 0)
+            retVal = CANUSB_ERROR_FATAL;
+        else if (n < (ssize_t)nbytes)
+            retVal = CANUSB_ERROR_FULL;
+        else
+            retVal = CANUSB_ERROR_OK;
+    }
+    return retVal;
+}
+
+CANUSB_Return_t CANUSB_ReadPacket(CANUSB_UsbPipe_t *usbPipe, void *buffer, size_t maxbytes, UInt16 timeout) {
+    UInt16 options = (usbPipe) ? usbPipe->options : CANUSB_OPTION_DEFAULT;
+    CANUSB_MsgPipe_t *msgPipe = (usbPipe) ? &usbPipe->msgPipe : NULL;
+    CANUSB_Return_t retVal = CANUSB_ERROR_RESOURCE;
+    size_t nbytes = 0U;
+
+    if (buffer && msgPipe && (options & CANUSB_OPTION_MSG_PIPE)) {
+        fd_set rdfs;
+        FD_ZERO(&rdfs);
+        FD_SET(msgPipe->fildes[PIPI], &rdfs);
+        
+        struct timeval timeVal;
+        timeVal.tv_sec = timeout / 1000;
+        timeVal.tv_usec = (timeout % 1000U) * 1000U;
+
+        for (;;) {
+            ssize_t n = read(msgPipe->fildes[PIPI], &buffer[nbytes], (maxbytes - nbytes));
+            if (n < 0) {
+                if (errno != EAGAIN) {
+                    MACCAN_DEBUG_ERROR("+++ Unable to read pipe (errno=%i)\n", errno);
+                    retVal = CANUSB_ERROR_FATAL;
+                    break;
+                }
+            } else
+                nbytes += (size_t)n;
+            if (nbytes < maxbytes) {
+                if (timeout == CANUSB_INFINITE) {  /* blocking read */
+                    if (select(msgPipe->fildes[PIPI]+1, &rdfs, NULL, NULL, NULL) < 0) {
+                        MACCAN_DEBUG_ERROR("+++ Unable to wait on blocking pipe (errno=%i)\n", errno);
+                        retVal = CANUSB_ERROR_FATAL;
+                        break;
+                    }
+                } else {  /* timed blocking read or polling */
+                    if (select(msgPipe->fildes[PIPI]+1, &rdfs, NULL, NULL, &timeVal) < 0) {
+                        MACCAN_DEBUG_ERROR("+++ Unable to wait on timed pipe (errno=%i)\n", errno);
+                        retVal = CANUSB_ERROR_FATAL;
+                        break;
+                    }
+                    if (!FD_ISSET(msgPipe->fildes[PIPI], &rdfs)) {
+                        retVal = CANUSB_ERROR_EMPTY;
+                        break;
+                    }
+                }
+            } else {
+                retVal = CANUSB_ERROR_OK;
+                break;
+            }
+        }
+    } else if (!(options & CANUSB_OPTION_MSG_PIPE)) {
+        MACCAN_DEBUG_ERROR("+++ Unable to read packet (NULL pointer)\n");
     }
     return retVal;
 }
@@ -122,7 +231,7 @@ CANUSB_Return_t CANUSB_Enqueue(CANUSB_UsbPipe_t *usbPipe, void const *message/*,
         }
         LEAVE_CRITICAL_SECTION(msgQueue);
     } else {
-        MACCAN_DEBUG_ERROR("+++ Couldn't enqueue message (NULL pointer)");
+        MACCAN_DEBUG_ERROR("+++ Unable to enqueue message (NULL pointer)\n");
     }
     return retVal;
 }
@@ -155,7 +264,7 @@ dequeue:
         }
         LEAVE_CRITICAL_SECTION(msgQueue);
     } else {
-        MACCAN_DEBUG_ERROR("+++ Couldn't enqueue message (NULL pointer)");
+        MACCAN_DEBUG_ERROR("+++ Unable to enqueue message (NULL pointer)\n");
     }
     return retVal;
 }
@@ -175,7 +284,7 @@ CANUSB_Return_t CANUSB_ResetQueue(CANUSB_UsbPipe_t *usbPipe) {
         LEAVE_CRITICAL_SECTION(msgQueue);
         retVal = CANUSB_ERROR_OK;
     } else {
-        MACCAN_DEBUG_ERROR("+++ Couldn't reset queue (NULL pointer)");
+        MACCAN_DEBUG_ERROR("+++ Unable to reset queue (NULL pointer)\n");
     }
     return retVal;
 }
