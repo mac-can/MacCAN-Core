@@ -22,39 +22,42 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <errno.h>
 
 int can_dbg_printf(FILE *file, const char *format,...) {
-    int rc = 0;
+    int rc = (-1);
 #if (OPTION_MACCAN_DEBUG_LEVEL > 0)
     va_list args;
     va_start(args, format);
     rc = vfprintf(file, format, args);
     va_end(args);
+    fflush(file);
 #else
-    if (format) { rc = 0; } /* to avoid compiler warnings */
-    if (file) { rc = 0; } /* to avoid compiler warnings */
+    if (format) { rc = (-1); } /* to avoid compiler warnings */
+    if (file) { rc = (-1); } /* to avoid compiler warnings */
 #endif
     return rc;
 }
 
 int can_dbg_func_printf(FILE *file, const char *name, const char *format,...) {
-    int rc = 0;
+    int rc = (-1);
 #if (OPTION_MACCAN_INSTRUMENTATION > 0)
     fprintf(file, "%s: ", name);
     va_list args;
     va_start(args, format);
     rc = vfprintf(file, format, args);
     va_end(args);
+    fflush(file);
 #else
-    if (format) { rc = 0; } /* to avoid compiler warnings */
-    if (name) { rc = 0; } /* to avoid compiler warnings */
-    if (file) { rc = 0; } /* to avoid compiler warnings */
+    if (format) { rc = (-1); } /* to avoid compiler warnings */
+    if (name) { rc = (-1); } /* to avoid compiler warnings */
+    if (file) { rc = (-1); } /* to avoid compiler warnings */
 #endif
     return rc;
 }
 
 int can_dbg_code_printf(FILE *file, int line, int level, const char *format,...) {
-    int rc = 0;
+    int rc = (-1);
 #if (OPTION_MACCAN_INSTRUMENTATION > 1)
     fprintf(file, "#%i", line);
     for (int i = 0; i <= level; i++)
@@ -63,11 +66,71 @@ int can_dbg_code_printf(FILE *file, int line, int level, const char *format,...)
     va_start(args, format);
     rc = vfprintf(file, format, args);
     va_end(args);
+    fflush(file);
 #else
-    if (format) { rc = 0; } /* to avoid compiler warnings */
-    if (level) { rc = 0; } /* to avoid compiler warnings */
-    if (line) { rc = 0; } /* to avoid compiler warnings */
-    if (file) { rc = 0; } /* to avoid compiler warnings */
+    if (format) { rc = (-1); } /* to avoid compiler warnings */
+    if (level) { rc = (-1); } /* to avoid compiler warnings */
+    if (line) { rc = (-1); } /* to avoid compiler warnings */
+    if (file) { rc = (-1); } /* to avoid compiler warnings */
 #endif
     return rc;
 }
+
+static FILE *fp = NULL;
+
+int can_log_open(const char *filename) {
+    int rc = (-1);
+#if (OPTION_MACCAN_LOGGER > 0)
+    if (filename)
+        fp = fopen(filename, "w");
+    else
+        fp = fopen(MACCAN_LOG_FILE, "w");
+    rc = (fp) ? 0 : (-1);
+#else
+    if (filename) { rc = (-1); } /* to avoid compiler warnings */
+#endif
+    return rc;
+}
+
+int can_log_close(void) {
+    int rc = (-1);
+#if (OPTION_MACCAN_LOGGER > 0)
+    rc = fclose(fp);
+    if (rc == 0)
+        fp = NULL;
+#endif
+    return rc;
+}
+
+int can_log_write(uint8_t *buffer, size_t nbyte) {
+    int i = (-1);
+#if (OPTION_MACCAN_LOGGER > 0)
+    for (i = 0; i < (int)nbyte; i++) {
+        if (fprintf(fp, "%02X%c", buffer[i], (i+1) < nbyte ? ' ' : '\n') < 3) {
+            i = (-1);
+            break;
+        }
+    }
+#else
+    if (buffer) { i = (-1); } /* to avoid compiler warnings */
+    if (nbyte) { i = (-1); } /* to avoid compiler warnings */
+#endif
+    return i;
+}
+
+int can_log_printf(const char *format,...) {
+    int rc = (-1);
+#if (OPTION_MACCAN_LOGGER > 0)
+    va_list args;
+    va_start(args, format);
+    rc = vfprintf(fp, format, args);
+    va_end(args);
+    fflush(fp);
+#else
+    if (format) { rc = (-1); } /* to avoid compiler warnings */
+#endif
+    return rc;
+}
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

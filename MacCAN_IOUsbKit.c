@@ -1407,3 +1407,6 @@ exit_worker_thread:
     pthread_exit(NULL);
     return NULL;
 }
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

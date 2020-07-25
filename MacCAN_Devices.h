@@ -49,3 +49,6 @@ extern const CANDEV_Device_t *CANDEV_GetDeviceById(UInt16 vendorId, UInt16 produ
 }
 #endif
 #endif /* MACCAN_DEVICES_H_INCLUDED */
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

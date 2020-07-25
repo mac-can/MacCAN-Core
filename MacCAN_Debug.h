@@ -84,6 +84,20 @@
     #define MACCAN_DEBUG_CODE(level,...)  while(0)
 #endif
 
+/* Write log message into a file
+ */
+    #define MACCAN_LOG_FILE  "mac-can.log"
+#if (OPTION_MACCAN_LOGGER > 0)
+    #define MACCAN_LOG_OPEN()  can_log_open(NULL)
+    #define MACCAN_LOG_CLOSE()  can_log_close()
+    #define MACCAN_LOG_PRINTF(...)  can_log_printf(__VA_ARGS__)
+    #define MACCAN_LOG_WRITE(buffer,nbyte)  can_log_write(buffer, nbyte)
+#else
+    #define MACCAN_LOG_OPEN()  while(0)
+    #define MACCAN_LOG_CLOSE()  while(0)
+    #define MACCAN_LOG_PRINTF(...)  while(0)
+    #define MACCAN_LOG_WRITE(buffer,nbyte)  while(0)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,7 +107,15 @@ extern int can_dbg_printf(FILE *file, const char *format,...);
 extern int can_dbg_func_printf(FILE *file, const char *name, const char *format,...);
 extern int can_dbg_code_printf(FILE *file, int line, int level, const char *format,...);
 
+extern int can_log_open(const char *filename);
+extern int can_log_close(void);
+extern int can_log_printf(const char *format,...);
+extern int can_log_write(uint8_t *buffer, size_t nbyte);
+
 #ifdef __cplusplus
 }
 #endif
 #endif /* MACCAN_DEBUG_H_INCLUDED */
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

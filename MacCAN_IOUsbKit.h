@@ -152,3 +152,6 @@ extern UInt32 CANUSB_GetVersion(void);
 }
 #endif
 #endif /* MACCAN_IOUSBKIT_H_INCLUDED */
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

@@ -63,3 +63,6 @@ const CANDEV_Device_t *CANDEV_GetDeviceById(UInt16 vendorId, UInt16 productId)
     }
     return ptrDevice;
 }
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

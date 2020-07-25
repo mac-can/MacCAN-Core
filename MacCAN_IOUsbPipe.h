@@ -72,3 +72,5 @@ extern CANUSB_Return_t CANUSB_ReadPacket(CANUSB_UsbPipe_t *usbPipe, void *buffer
 #endif
 #endif /* MACCAN_IOUSBPIPE_H_INCLUDED */
 
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

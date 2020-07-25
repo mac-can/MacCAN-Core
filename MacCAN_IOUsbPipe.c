@@ -335,3 +335,5 @@ static Boolean DequeueElement(CANUSB_MsgQueue_t *queue, void *element) {
         return false;
 }
 
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */

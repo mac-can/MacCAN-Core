@@ -368,3 +368,6 @@ extern char *MacCAN_GetVersion(void);  /**< retrieves version information. */
 /** @}
  */
 #endif /* MACCAN_H_INCLUDED */
+
+/* * $Id$ *** (C) UV Software, Berlin ***
+ */
