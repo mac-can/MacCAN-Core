@@ -126,7 +126,7 @@ extern Boolean CANUSB_IsDevicePresent(CANUSB_Handle_t handle);
 
 extern Boolean CANUSB_IsDeviceOpened(CANUSB_Handle_t handle);
 
-extern CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_t nbytes);
+extern CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_t n);
 
 extern CANUSB_Return_t CANUSB_GetDeviceVendorId(CANUSB_Handle_t handle, UInt16 *value);
 

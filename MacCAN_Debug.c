@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <pthread.h>
 #include <errno.h>
 
 int can_dbg_printf(FILE *file, const char *format,...) {
@@ -76,11 +77,16 @@ int can_dbg_code_printf(FILE *file, int line, int level, const char *format,...)
     return rc;
 }
 
-static FILE *fp = NULL;
+#if (OPTION_MACCAN_LOGGER > 0)
+    static FILE *fp = NULL;
+    static pthread_mutex_t mt;
+#endif
 
 int can_log_open(const char *filename) {
     int rc = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if ((rc = pthread_mutex_init(&mt, NULL)) < 0)
+        return rc;
     if (filename)
         fp = fopen(filename, "w");
     else
@@ -98,19 +104,25 @@ int can_log_close(void) {
     rc = fclose(fp);
     if (rc == 0)
         fp = NULL;
+    (void)pthread_mutex_destroy(&mt);
 #endif
     return rc;
 }
 
-int can_log_write(uint8_t *buffer, size_t nbyte) {
+int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix) {
     int i = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if ((i = pthread_mutex_lock(&mt)) < 0)
+        return i;  /* shoplifted */
+    if (prefix)
+        fprintf(fp, "%s ", prefix);
     for (i = 0; i < (int)nbyte; i++) {
         if (fprintf(fp, "%02X%c", buffer[i], (i+1) < nbyte ? ' ' : '\n') < 3) {
             i = (-1);
             break;
         }
     }
+    (void)pthread_mutex_unlock(&mt);
 #else
     if (buffer) { i = (-1); } /* to avoid compiler warnings */
     if (nbyte) { i = (-1); } /* to avoid compiler warnings */
@@ -121,11 +133,14 @@ int can_log_write(uint8_t *buffer, size_t nbyte) {
 int can_log_printf(const char *format,...) {
     int rc = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if ((rc = pthread_mutex_lock(&mt)) < 0)
+        return rc;
     va_list args;
     va_start(args, format);
     rc = vfprintf(fp, format, args);
     va_end(args);
     fflush(fp);
+    (void)pthread_mutex_unlock(&mt);
 #else
     if (format) { rc = (-1); } /* to avoid compiler warnings */
 #endif

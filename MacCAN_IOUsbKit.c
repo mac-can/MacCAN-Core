@@ -697,7 +697,7 @@ Boolean CANUSB_IsDeviceOpened(CANUSB_Handle_t handle) {
     return ret;
 }
 
-CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_t nbytes) {
+CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_t n) {
     int ret = 0;
     
     /* must be initialized */
@@ -714,7 +714,7 @@ CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_
     ENTER_CRITICAL_SECTION(handle);
     if (usbDevice[handle].fPresent &&
         (usbDevice[handle].ioDevice != NULL)) {
-        strncpy(buffer, usbDevice[handle].szName, nbytes);
+        strncpy(buffer, usbDevice[handle].szName, n);
     } else {
         MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not available\n", handle);
         ret = CANUSB_ERROR_HANDLE;

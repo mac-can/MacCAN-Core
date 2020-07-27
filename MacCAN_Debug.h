@@ -91,12 +91,12 @@
     #define MACCAN_LOG_OPEN()  can_log_open(NULL)
     #define MACCAN_LOG_CLOSE()  can_log_close()
     #define MACCAN_LOG_PRINTF(...)  can_log_printf(__VA_ARGS__)
-    #define MACCAN_LOG_WRITE(buffer,nbyte)  can_log_write(buffer, nbyte)
+    #define MACCAN_LOG_WRITE(buf,len,pre)  can_log_write(buf, len, pre)
 #else
     #define MACCAN_LOG_OPEN()  while(0)
     #define MACCAN_LOG_CLOSE()  while(0)
     #define MACCAN_LOG_PRINTF(...)  while(0)
-    #define MACCAN_LOG_WRITE(buffer,nbyte)  while(0)
+    #define MACCAN_LOG_WRITE(buf,len,pre)  while(0)
 #endif
 
 #ifdef __cplusplus
@@ -110,7 +110,7 @@ extern int can_dbg_code_printf(FILE *file, int line, int level, const char *form
 extern int can_log_open(const char *filename);
 extern int can_log_close(void);
 extern int can_log_printf(const char *format,...);
-extern int can_log_write(uint8_t *buffer, size_t nbyte);
+extern int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix);
 
 #ifdef __cplusplus
 }
