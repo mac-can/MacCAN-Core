@@ -29,11 +29,8 @@
 #define CANUSB_OPTION_DEFAULT   CANUSB_OPTION_RX_QUEUE
 
 /* CAN API V3 compatible error codes */
-#define CANUSB_ERROR_OK  (0)
 #define CANUSB_ERROR_FULL  (-20)
 #define CANUSB_ERROR_EMPTY  (-30)
-#define CANUSB_ERROR_RESOURCE  (-90)
-#define CANUSB_ERROR_FATAL  (-99)
 
 /* CAN API V3 compatible time-out value */
 #define CANUSB_INFINITE  (65535U)

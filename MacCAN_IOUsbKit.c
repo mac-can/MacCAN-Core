@@ -53,18 +53,6 @@
 
 /*#define PRINT_USB_PIPE_INFO*/
 
-/* CAN API V3 compatible error codes */
-#define CANUSB_ERROR_RESOURCE (-90)
-#define CANUSB_ERROR_reserved (-91)
-#define CANUSB_ERROR_HANDLE   (-92)
-#define CANUSB_ERROR_ILLPARA  (-93)
-#define CANUSB_ERROR_NULLPTR  (-94)
-#define CANUSB_ERROR_NOTINIT  (-95)
-#define CANUSB_ERROR_YETINIT  (-96)
-#define CANUSB_ERROR_LIBRARY  (-97)
-#define CANUSB_ERROR_NOTSUPP  (-98)
-#define CANUSB_ERROR_FATAL    (-99)
-
 #define IS_HANDLE_VALID(hnd)  ((0 <= (hnd)) && ((hnd) < CANUSB_MAX_DEVICES))
 
 #define ENTER_CRITICAL_SECTION(idx)  assert(0 == pthread_mutex_lock(&usbDevice[idx].ptMutex))

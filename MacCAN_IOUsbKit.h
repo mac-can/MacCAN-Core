@@ -40,12 +40,24 @@
 #define USBREQ_RECIPIENT_ENDPOINT   0x02U
 #define USBREQ_RECIPIENT_OTHER      0x03U
 
+/* CAN API V3 compatible error codes */
+#define CANUSB_ERROR_RESOURCE (-90)
+#define CANUSB_ERROR_reserved (-91)
+#define CANUSB_ERROR_HANDLE   (-92)
+#define CANUSB_ERROR_ILLPARA  (-93)
+#define CANUSB_ERROR_NULLPTR  (-94)
+#define CANUSB_ERROR_NOTINIT  (-95)
+#define CANUSB_ERROR_YETINIT  (-96)
+#define CANUSB_ERROR_LIBRARY  (-97)
+#define CANUSB_ERROR_NOTSUPP  (-98)
+#define CANUSB_ERROR_FATAL    (-99)
+#define CANUSB_ERROR_OK         (0)
+#define CANUSB_SUCCESS  CANUSB_ERROR_OK
+
 typedef int CANUSB_Handle_t;
 typedef int CANUSB_Return_t;
 
-typedef void (*CANUSB_Callback_t)(void *refCon, UInt8 *buffer, UInt32 length);
-
-typedef void *CANUSB_MsgParam_t;
+typedef void (*CANUSB_Callback_t)(void *refCon, UInt8 *buffer, UInt32 nbyte);
 
 typedef struct msg_queue_t_ {
     UInt32 size;
@@ -69,6 +81,8 @@ typedef struct msg_pipe_t_ {
     int fildes[2];
     int flag;  /* Cesi n'est pas une pipe;) */
 } CANUSB_MsgPipe_t;
+
+typedef void* CANUSB_MsgParam_t;
 
 typedef struct usb_buffer_t_ {
     UInt8 *data[2];
