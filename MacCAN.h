@@ -94,20 +94,6 @@ typedef int MacCAN_Handle_t;
 typedef int MacCAN_Return_t;
 /** @} */
 
-/** @brief  CAN to USB Device identification:
- */
-typedef struct can_device_t_ {
-    uint16_t vendorId;   /**< USB vendor ID (16-bit) */
-    uint16_t productId;  /**< USB product ID (16-bit) */
-} MacCAN_Device_t;
-
-/** @brief  CAN to USB Device identification list
- *  @note   Each MacCAN driver implemenation has to implement
- *          an array with pairs of { <vendorId>, <productId> },
- *          terminated by a pair of { (-1), (-1) }.
- */
-extern const MacCAN_Device_t MacCAN_Devices[];
-
 #ifdef __cplusplus
 /// \name   MacCAN API
 /// \brief  MacCAN API based of CAN Interface API Version 3 (CAN API V3).

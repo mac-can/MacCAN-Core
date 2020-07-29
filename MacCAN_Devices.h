@@ -21,19 +21,14 @@
 #ifndef MACCAN_DEVICES_H_INCLUDED
 #define MACCAN_DEVICES_H_INCLUDED
 
-#include "MacCAN.h"
-
 #include <MacTypes.h>
 
-#ifndef MACCAN_H_INCLUDED
-/* Hmm, that's pretty fragile! */
+#define CANDEV_LAST_ENTRY_IN_DEVICE_LIST  {0xFFFFU, 0xFFFFU}
+
 typedef struct can_device_t_ {
     UInt16 vendorId;
     UInt16 productId;
-} CANDEV_Device_t;
-#else
-typedef MacCAN_Device_t CANDEV_Device_t;
-#endif
+} CANDEV_Device_t, MacCAN_Device_t;
 
 #ifdef __cplusplus
 extern "C" {
