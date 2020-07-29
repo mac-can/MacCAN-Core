@@ -23,11 +23,12 @@
 
 #include <MacTypes.h>
 
-#define CANDEV_LAST_ENTRY_IN_DEVICE_LIST  {0xFFFFU, 0xFFFFU}
+#define CANDEV_LAST_ENTRY_IN_DEVICE_LIST  {0xFFFFU, 0xFFFFU, 0U}
 
 typedef struct can_device_t_ {
     UInt16 vendorId;
     UInt16 productId;
+    UInt8 numChannels;
 } CANDEV_Device_t, MacCAN_Device_t;
 
 #ifdef __cplusplus

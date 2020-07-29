@@ -963,6 +963,40 @@ CANUSB_Return_t CANUSB_GetInterfaceNumEndpoints(CANUSB_Handle_t handle, UInt8 *v
     return ret;
 }
 
+CANUSB_Return_t CANUSB_GetDeviceNumChannels(CANUSB_Handle_t handle, UInt8 *value) {
+    int ret = 0;
+    
+    /* must be initialized */
+    if (!fInitialized)
+        return CANUSB_ERROR_NOTINIT;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(handle))
+        return CANUSB_ERROR_HANDLE;
+    /* check for NULL pointer */
+    if (!value)
+        return CANUSB_ERROR_NULLPTR;
+        
+    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
+    ENTER_CRITICAL_SECTION(handle);
+    if (usbDevice[handle].fPresent &&
+        (usbDevice[handle].ioDevice != NULL)) {
+        const CANDEV_Device_t *ptrDevice = CANDEV_GetDeviceById(usbDevice[handle].u16VendorId,
+                                                                usbDevice[handle].u16ProductId);
+        if (ptrDevice) {
+            *value = ptrDevice->numChannels;
+        } else {
+            MACCAN_DEBUG_ERROR("+++ Oops, no entry for device #%i\n", handle);
+            ret = CANUSB_ERROR_FATAL;
+        }
+    } else {
+        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not available\n", handle);
+        ret = CANUSB_ERROR_HANDLE;
+    }
+    LEAVE_CRITICAL_SECTION(handle);
+    MACCAN_DEBUG_FUNC("unlock\n");
+    return ret;
+}
+
 UInt32 CANUSB_GetVersion(void) {
     return ((UInt32)VERSION_MAJOR << 24) |
            ((UInt32)VERSION_MINOR << 16) |
