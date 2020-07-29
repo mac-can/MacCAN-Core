@@ -24,13 +24,14 @@
 #include "MacCAN_IOUsbKit.h"
 
 #define CANUSB_OPTION_RX_QUEUE  0x0000U
-#define CANUSB_OPTION_TX_QUEUE  0x0001U
+#define CANUSB_OPTION_TX_QUEUE  0x0001U  // TODO: not realized yet!
 #define CANUSB_OPTION_MSG_PIPE  0x0010U
 #define CANUSB_OPTION_DEFAULT   CANUSB_OPTION_RX_QUEUE
 
 /* CAN API V3 compatible error codes */
 #define CANUSB_ERROR_FULL  (-20)
 #define CANUSB_ERROR_EMPTY  (-30)
+#define CANUSB_ERROR_TIMEOUT (-50)
 
 /* CAN API V3 compatible time-out value */
 #define CANUSB_INFINITE  (65535U)

@@ -202,7 +202,7 @@ CANUSB_Return_t CANUSB_ReadPacket(CANUSB_UsbPipe_t *usbPipe, void *buffer, size_
                         break;
                     }
                     if (!FD_ISSET(msgPipe->fildes[PIPI], &rdfs)) {
-                        retVal = CANUSB_ERROR_EMPTY;
+                        retVal = CANUSB_ERROR_TIMEOUT;
                         break;
                     }
                 }
