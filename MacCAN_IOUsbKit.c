@@ -82,6 +82,7 @@ typedef struct usb_device_t_ {              /* USB device: */
     UInt16 u16VendorId;                     /*   vendor ID (16-bit) */
     UInt16 u16ProductId;                    /*   product ID (16-bit) */
     UInt16 u16ReleaseNo;                    /*   release no. (16-bit) */
+    UInt8 u8NumCanChannels;                 /*   "number of CAN channels" */
     UInt32 u32Location;                     /*   unique location ID (32-bit) */
     UInt16 u16Address;                      /*   device address (16-bit?) */
     IOUSBDeviceInterface **ioDevice;        /*   device interface (instance) */
@@ -793,6 +794,33 @@ CANUSB_Return_t CANUSB_GetDeviceReleaseNo(CANUSB_Handle_t handle, UInt16 *value)
     return ret;
 }
 
+CANUSB_Return_t CANUSB_GetDeviceNumCanChannels(CANUSB_Handle_t handle, UInt8 *value) {
+    int ret = 0;
+    
+    /* must be initialized */
+    if (!fInitialized)
+        return CANUSB_ERROR_NOTINIT;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(handle))
+        return CANUSB_ERROR_HANDLE;
+    /* check for NULL pointer */
+    if (!value)
+        return CANUSB_ERROR_NULLPTR;
+        
+    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
+    ENTER_CRITICAL_SECTION(handle);
+    if (usbDevice[handle].fPresent &&
+        (usbDevice[handle].ioDevice != NULL)) {
+        *value = usbDevice[handle].u8NumCanChannels;
+    } else {
+        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not available\n", handle);
+        ret = CANUSB_ERROR_HANDLE;
+    }
+    LEAVE_CRITICAL_SECTION(handle);
+    MACCAN_DEBUG_FUNC("unlock\n");
+    return ret;
+}
+
 CANUSB_Return_t CANUSB_GetDeviceLocation(CANUSB_Handle_t handle, UInt32 *value) {
     int ret = 0;
     
@@ -963,40 +991,6 @@ CANUSB_Return_t CANUSB_GetInterfaceNumEndpoints(CANUSB_Handle_t handle, UInt8 *v
     return ret;
 }
 
-CANUSB_Return_t CANUSB_GetDeviceNumChannels(CANUSB_Handle_t handle, UInt8 *value) {
-    int ret = 0;
-    
-    /* must be initialized */
-    if (!fInitialized)
-        return CANUSB_ERROR_NOTINIT;
-    /* must be a valid handle */
-    if (!IS_HANDLE_VALID(handle))
-        return CANUSB_ERROR_HANDLE;
-    /* check for NULL pointer */
-    if (!value)
-        return CANUSB_ERROR_NULLPTR;
-        
-    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
-    ENTER_CRITICAL_SECTION(handle);
-    if (usbDevice[handle].fPresent &&
-        (usbDevice[handle].ioDevice != NULL)) {
-        const CANDEV_Device_t *ptrDevice = CANDEV_GetDeviceById(usbDevice[handle].u16VendorId,
-                                                                usbDevice[handle].u16ProductId);
-        if (ptrDevice) {
-            *value = ptrDevice->numChannels;
-        } else {
-            MACCAN_DEBUG_ERROR("+++ Oops, no entry for device #%i\n", handle);
-            ret = CANUSB_ERROR_FATAL;
-        }
-    } else {
-        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not available\n", handle);
-        ret = CANUSB_ERROR_HANDLE;
-    }
-    LEAVE_CRITICAL_SECTION(handle);
-    MACCAN_DEBUG_FUNC("unlock\n");
-    return ret;
-}
-
 UInt32 CANUSB_GetVersion(void) {
     return ((UInt32)VERSION_MAJOR << 24) |
            ((UInt32)VERSION_MINOR << 16) |
@@ -1091,6 +1085,7 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
     io_name_t               name;
     kern_return_t           kr;
     int index, found;
+    const CANDEV_Device_t * canDevice;
 
     while((service = IOIteratorNext(iterator)))
     {
@@ -1124,7 +1119,7 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
         (void) (*device)->GetLocationID(device, &location);
         (void) (*device)->GetDeviceAddress(device, &address);
         (void) (*device)->GetDeviceSpeed(device, &speed);
-        if (!CANDEV_GetDeviceById(vendor, product)) {
+        if ((canDevice = CANDEV_GetDeviceById(vendor, product)) == NULL) {
             MACCAN_DEBUG_ERROR("+++ Found unwanted device (vendor = %03x, product = %03x)\n", vendor, product);
             (void) (*device)->Release(device);
             continue;
@@ -1150,7 +1145,9 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
                 usbDevice[index].ioDevice = device;
                 usbDevice[index].fPresent = true;
                 found = 1;
-            }
+                /* get number of CAN channels from device list */
+                usbDevice[index].u8NumCanChannels = canDevice->numChannels;
+             }
             LEAVE_CRITICAL_SECTION(index);
         }
         if (!found) {

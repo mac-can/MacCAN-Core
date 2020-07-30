@@ -28,6 +28,10 @@
 #endif
 #define CANUSB_INVALID_HANDLE  (-1)
 
+#define CANUSB_ANY_VENDOR_ID  0xFFFFU
+#define CANUSB_ANY_PRODUCT_ID  0xFFFFU
+
+/* USB device request (setup packet) */
 #define USBREQ_HOST_TO_DEVICE  0x00U
 #define USBREQ_DEVICE_TO_HOST  0x80U
 
@@ -148,7 +152,7 @@ extern CANUSB_Return_t CANUSB_GetDeviceProductId(CANUSB_Handle_t handle, UInt16 
 
 extern CANUSB_Return_t CANUSB_GetDeviceReleaseNo(CANUSB_Handle_t handle, UInt16 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceNumChannels(CANUSB_Handle_t handle, UInt8 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceNumCanChannels(CANUSB_Handle_t handle, UInt8 *value);
 
 extern CANUSB_Return_t CANUSB_GetDeviceLocation(CANUSB_Handle_t handle, UInt32 *value);
 
