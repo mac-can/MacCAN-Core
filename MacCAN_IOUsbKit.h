@@ -32,6 +32,18 @@
 #define CANUSB_ANY_VENDOR_ID  0xFFFFU
 #define CANUSB_ANY_PRODUCT_ID  0xFFFFU
 
+/* USB endpoint properties */
+#define USBPIPE_DIR_OUT   0U
+#define USBPIPE_DIR_IN    1U
+#define USBPIPE_DIR_NONE  2U
+#define USBPIPE_DIR_ANY   3U
+
+#define USBPIPE_TYPE_CTRL  0U
+#define USBPIPE_TYPE_ISOC  1U
+#define USBPIPE_TYPE_BULK  2U
+#define USBPIPE_TYPE_INTR  3U
+#define USBPIPE_TYPE_ANY 0xFFU
+
 /* USB device request (setup packet) */
 #define USBREQ_HOST_TO_DEVICE  0x00U
 #define USBREQ_DEVICE_TO_HOST  0x80U
@@ -167,6 +179,12 @@ extern CANUSB_Return_t CANUSB_GetInterfaceSubClass(CANUSB_Handle_t handle, UInt8
 extern CANUSB_Return_t CANUSB_GetInterfaceProtocol(CANUSB_Handle_t handle, UInt8 *value);
 
 extern CANUSB_Return_t CANUSB_GetInterfaceNumEndpoints(CANUSB_Handle_t handle, UInt8 *value);
+
+extern CANUSB_Return_t CANUSB_GetInterfaceEndpointDirection(CANUSB_Handle_t handle, UInt8 index, UInt8 *value);
+
+extern CANUSB_Return_t CANUSB_GetInterfaceEndpointTransferType(CANUSB_Handle_t handle, UInt8 index, UInt8 *value);
+
+extern CANUSB_Return_t CANUSB_GetInterfaceEndpointMaxPacketSize(CANUSB_Handle_t handle, UInt8 index, UInt16 *value);
 
 extern UInt32 CANUSB_GetVersion(void);
 

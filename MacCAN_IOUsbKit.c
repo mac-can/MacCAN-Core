@@ -51,7 +51,7 @@
 #define VERSION_MINOR     1
 #define VERSION_PATCH     0
 
-/*#define PRINT_USB_PIPE_INFO*/
+#define PRINT_USB_PIPE_INFO
 
 #define IS_INDEX_VALID(idx)  ((0 <= (idx)) && ((idx) < CANUSB_MAX_DEVICES))
 #define IS_HANDLE_VALID(hnd)  IS_INDEX_VALID(hnd)
@@ -74,7 +74,6 @@ typedef struct usb_interface_t_ {           /* USB interface: */
     UInt8 u8Protocol;                       /*   protocol of the interface (8-bit) */
     UInt8 u8NumEndpoints;                   /*   number of endpoints of the interface */
     IOUSBInterfaceInterface **ioInterface;  /*   interface interface (instance) */
-    CANUSB_Handle_t hDevice;                /*   USB device handle (index) */
 } USBInterface_t;
 
 typedef struct usb_device_t_ {              /* USB device: */
@@ -998,6 +997,135 @@ CANUSB_Return_t CANUSB_GetInterfaceNumEndpoints(CANUSB_Handle_t handle, UInt8 *v
     return ret;
 }
 
+CANUSB_Return_t CANUSB_GetInterfaceEndpointDirection(CANUSB_Handle_t handle, UInt8 index, UInt8 *value) {
+    IOReturn        kr2;
+    UInt8           direction;
+    UInt8           number;
+    UInt8           transferType;
+    UInt16          maxPacketSize;
+    UInt8           interval;
+    int ret = 0;
+
+    /* must be initialized */
+    if (!fInitialized)
+        return CANUSB_ERROR_NOTINIT;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(handle))
+        return CANUSB_ERROR_HANDLE;
+    /* check for NULL pointer */
+    if (!value)
+        return CANUSB_ERROR_NULLPTR;
+        
+    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
+    ENTER_CRITICAL_SECTION(handle);
+    if (usbDevice[handle].fPresent &&
+        (usbDevice[handle].ioDevice != NULL) &&
+        usbDevice[handle].usbInterface.fOpened &&
+        (usbDevice[handle].usbInterface.ioInterface != NULL)) {
+        kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
+                index, &direction, &number, &transferType, &maxPacketSize, &interval);
+        if(kIOReturnSuccess != kr2) {
+            MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
+            ret = CANUSB_ERROR_RESOURCE;
+        } else {
+            /* 0 = out / 1 = in / 2 = none */
+            *value = direction;
+        }
+    } else {
+        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
+        ret = !usbDevice[handle].fPresent ? CANUSB_ERROR_HANDLE : CANUSB_ERROR_NOTINIT;
+    }
+    LEAVE_CRITICAL_SECTION(handle);
+    MACCAN_DEBUG_FUNC("unlock\n");
+    return ret;
+}
+
+CANUSB_Return_t CANUSB_GetInterfaceEndpointTransferType(CANUSB_Handle_t handle, UInt8 index, UInt8 *value) {
+    IOReturn        kr2;
+    UInt8           direction;
+    UInt8           number;
+    UInt8           transferType;
+    UInt16          maxPacketSize;
+    UInt8           interval;
+    int ret = 0;
+
+    /* must be initialized */
+    if (!fInitialized)
+        return CANUSB_ERROR_NOTINIT;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(handle))
+        return CANUSB_ERROR_HANDLE;
+    /* check for NULL pointer */
+    if (!value)
+        return CANUSB_ERROR_NULLPTR;
+        
+    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
+    ENTER_CRITICAL_SECTION(handle);
+    if (usbDevice[handle].fPresent &&
+        (usbDevice[handle].ioDevice != NULL) &&
+        usbDevice[handle].usbInterface.fOpened &&
+        (usbDevice[handle].usbInterface.ioInterface != NULL)) {
+        kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
+                index, &direction, &number, &transferType, &maxPacketSize, &interval);
+        if(kIOReturnSuccess != kr2) {
+            MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
+            ret = CANUSB_ERROR_RESOURCE;
+        } else {
+            /* 0 = Control / 1 = ISOC / 2 = Bulk / 3 = Interrupt */
+            *value = transferType;
+        }
+    } else {
+        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
+        ret = !usbDevice[handle].fPresent ? CANUSB_ERROR_HANDLE : CANUSB_ERROR_NOTINIT;
+    }
+    LEAVE_CRITICAL_SECTION(handle);
+    MACCAN_DEBUG_FUNC("unlock\n");
+    return ret;
+}
+
+CANUSB_Return_t CANUSB_GetInterfaceEndpointMaxPacketSize(CANUSB_Handle_t handle, UInt8 index, UInt16 *value) {
+    IOReturn        kr2;
+    UInt8           direction;
+    UInt8           number;
+    UInt8           transferType;
+    UInt16          maxPacketSize;
+    UInt8           interval;
+    int ret = 0;
+
+    /* must be initialized */
+    if (!fInitialized)
+        return CANUSB_ERROR_NOTINIT;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(handle))
+        return CANUSB_ERROR_HANDLE;
+    /* check for NULL pointer */
+    if (!value)
+        return CANUSB_ERROR_NULLPTR;
+        
+    MACCAN_DEBUG_FUNC("lock #%i\n", handle);
+    ENTER_CRITICAL_SECTION(handle);
+    if (usbDevice[handle].fPresent &&
+        (usbDevice[handle].ioDevice != NULL) &&
+        usbDevice[handle].usbInterface.fOpened &&
+        (usbDevice[handle].usbInterface.ioInterface != NULL)) {
+        kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
+                index, &direction, &number, &transferType, &maxPacketSize, &interval);
+        if(kIOReturnSuccess != kr2) {
+            MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
+            ret = CANUSB_ERROR_RESOURCE;
+        } else {
+            /* as a 16-bit value */
+            *value = maxPacketSize;
+        }
+    } else {
+        MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
+        ret = !usbDevice[handle].fPresent ? CANUSB_ERROR_HANDLE : CANUSB_ERROR_NOTINIT;
+    }
+    LEAVE_CRITICAL_SECTION(handle);
+    MACCAN_DEBUG_FUNC("unlock\n");
+    return ret;
+}
+
 UInt32 CANUSB_GetVersion(void) {
     return ((UInt32)VERSION_MAJOR << 24) |
            ((UInt32)VERSION_MINOR << 16) |
@@ -1363,7 +1491,6 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
 #endif
         /* For this test, just use first interface, so exit loop */
         if (IS_INDEX_VALID(index)) {
-            usbDevice[index].usbInterface.hDevice = index;
             usbDevice[index].usbInterface.ioInterface = interface;
             usbDevice[index].usbInterface.u8Class = interfaceClass;
             usbDevice[index].usbInterface.u8SubClass = interfaceSubClass;
