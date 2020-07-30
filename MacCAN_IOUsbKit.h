@@ -26,6 +26,7 @@
 #ifndef CANUSB_MAX_DEVICES
 #define CANUSB_MAX_DEVICES  42
 #endif
+#define CANUSB_INVALID_INDEX  (-1)
 #define CANUSB_INVALID_HANDLE  (-1)
 
 #define CANUSB_ANY_VENDOR_ID  0xFFFFU
@@ -58,6 +59,7 @@
 #define CANUSB_ERROR_OK         (0)
 #define CANUSB_SUCCESS  CANUSB_ERROR_OK
 
+typedef int CANUSB_Index_t;
 typedef int CANUSB_Handle_t;
 typedef int CANUSB_Return_t;
 
@@ -122,7 +124,7 @@ extern CANUSB_Return_t CANUSB_Initialize(void);
 
 extern CANUSB_Return_t CANUSB_Teardown(void);
 
-extern CANUSB_Handle_t CANUSB_OpenDevice(UInt16 vendorId, UInt16 productId, UInt8 channelNo);
+extern CANUSB_Handle_t CANUSB_OpenDevice(CANUSB_Index_t index, UInt16 vendorId, UInt16 productId);
 
 extern CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle);
 
@@ -136,27 +138,27 @@ extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_Handle_t handle, UInt8 p
 
 extern CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 size);
 
-extern CANUSB_Handle_t CANUSB_GetFirstDevice(void);
+extern CANUSB_Index_t CANUSB_GetFirstDevice(void);
 
-extern CANUSB_Handle_t CANUSB_GetNextDevice(void);
+extern CANUSB_Index_t CANUSB_GetNextDevice(void);
 
-extern Boolean CANUSB_IsDevicePresent(CANUSB_Handle_t handle);
+extern Boolean CANUSB_IsDevicePresent(CANUSB_Index_t index);
 
-extern Boolean CANUSB_IsDeviceOpened(CANUSB_Handle_t handle);
+extern Boolean CANUSB_IsDeviceOpened(CANUSB_Index_t index);
 
-extern CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Handle_t handle, char *buffer, size_t n);
+extern CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Index_t index, char *buffer, size_t n);
 
-extern CANUSB_Return_t CANUSB_GetDeviceVendorId(CANUSB_Handle_t handle, UInt16 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceVendorId(CANUSB_Index_t index, UInt16 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceProductId(CANUSB_Handle_t handle, UInt16 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceProductId(CANUSB_Index_t index, UInt16 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceReleaseNo(CANUSB_Handle_t handle, UInt16 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceReleaseNo(CANUSB_Index_t index, UInt16 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceNumCanChannels(CANUSB_Handle_t handle, UInt8 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceNumCanChannels(CANUSB_Index_t index, UInt8 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceLocation(CANUSB_Handle_t handle, UInt32 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceLocation(CANUSB_Index_t index, UInt32 *value);
 
-extern CANUSB_Return_t CANUSB_GetDeviceAddress(CANUSB_Handle_t handle, UInt16 *value);
+extern CANUSB_Return_t CANUSB_GetDeviceAddress(CANUSB_Index_t index, UInt16 *value);
 
 extern CANUSB_Return_t CANUSB_GetInterfaceClass(CANUSB_Handle_t handle, UInt8 *value);
 
