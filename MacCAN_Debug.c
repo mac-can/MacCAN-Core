@@ -85,6 +85,8 @@ int can_dbg_code_printf(FILE *file, int line, int level, const char *format,...)
 int can_log_open(const char *filename) {
     int rc = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if (fp)
+        return rc;
     if ((rc = pthread_mutex_init(&mt, NULL)) < 0)
         return rc;
     if (filename)
@@ -101,7 +103,8 @@ int can_log_open(const char *filename) {
 int can_log_close(void) {
     int rc = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
-    rc = fclose(fp);
+    if (fp)
+        rc = fclose(fp);
     if (rc == 0)
         fp = NULL;
     (void)pthread_mutex_destroy(&mt);
@@ -112,6 +115,8 @@ int can_log_close(void) {
 int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix) {
     int i = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if (!fp)
+        return i;  /* shoplifted */
     if ((i = pthread_mutex_lock(&mt)) < 0)
         return i;  /* shoplifted */
     if (prefix)
@@ -133,6 +138,8 @@ int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix) {
 int can_log_printf(const char *format,...) {
     int rc = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
+    if (!fp)
+        return rc;
     if ((rc = pthread_mutex_lock(&mt)) < 0)
         return rc;
     va_list args;

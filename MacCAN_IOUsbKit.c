@@ -49,9 +49,9 @@
 
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     1
-#define VERSION_PATCH     0
+#define VERSION_PATCH     1
 
-#define PRINT_USB_PIPE_INFO
+/*#define PRINT_USB_PIPE_INFO  !* set it in build environment, if needed */
 
 #define IS_INDEX_VALID(idx)  ((0 <= (idx)) && ((idx) < CANUSB_MAX_DEVICES))
 #define IS_HANDLE_VALID(hnd)  IS_INDEX_VALID(hnd)
