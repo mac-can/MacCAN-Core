@@ -304,6 +304,14 @@ public:
     static MacCAN_Return_t MapBitrate2Speed(MacCAN_Bitrate_t bitrate, MacCAN_BusSpeed_t &speed);
 /// \}
 
+/// \name   CAN FD Data Length Code
+/// \brief  Methods for DLC conversion.
+/// \{
+public:
+    static uint8_t DLc2Len(uint8_t dlc);
+    static uint8_t Len2Dlc(uint8_t len);
+/// \}
+
 /// \name   MacCAN Core (C++ Part)
 /// \brief  Methods to initialize and release the MacCAN IOUsbKit.
 /// \{

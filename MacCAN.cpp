@@ -78,6 +78,28 @@ MacCAN_Return_t CMacCAN::MapBitrate2Speed(MacCAN_Bitrate_t bitrate, MacCAN_BusSp
     return (MacCAN_Return_t)btr_bitrate2speed(&bitrate, false, false, &speed);
 }
 
+//  Methods for DLC conversion
+//
+EXPORT
+uint8_t CMacCAN::DLc2Len(uint8_t dlc) {
+    const static uint8_t dlc_table[16] = {
+        0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 12U, 16U, 20U, 24U, 32U, 48U, 64U
+    };
+    return dlc_table[dlc & 0xFU];
+}
+
+EXPORT
+uint8_t CMacCAN::Len2Dlc(uint8_t len) {
+    if(len > 48U) return 0x0FU;
+    if(len > 32U) return 0x0EU;
+    if(len > 24U) return 0x0DU;
+    if(len > 20U) return 0x0CU;
+    if(len > 16U) return 0x0BU;
+    if(len > 12U) return 0x0AU;
+    if(len > 8U) return 0x09U;
+    return len;
+}
+
 //  Method to retrieve version information about the MacCAN Core
 //
 EXPORT
