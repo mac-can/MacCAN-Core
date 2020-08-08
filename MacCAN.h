@@ -55,6 +55,7 @@
 #ifndef MACCAN_H_INCLUDED
 #define MACCAN_H_INCLUDED
 
+#include "CANAPI_Defines.h"
 #include "CANAPI_Types.h"
 
 /** @name   Aliases
