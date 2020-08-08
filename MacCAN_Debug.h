@@ -110,7 +110,7 @@ extern int can_dbg_code_printf(FILE *file, int line, int level, const char *form
 extern int can_log_open(const char *filename);
 extern int can_log_close(void);
 extern int can_log_printf(const char *format,...);
-extern int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix);
+extern int can_log_write(unsigned char *buffer, size_t nbyte, const char *prefix);
 
 #ifdef __cplusplus
 }

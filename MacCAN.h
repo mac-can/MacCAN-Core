@@ -97,7 +97,7 @@ typedef int MacCAN_Return_t;
 
 #ifdef __cplusplus
 /// \name   MacCAN API
-/// \brief  MacCAN API based of CAN Interface API Version 3 (CAN API V3).
+/// \brief  MacCAN API based on CAN Interface API Version 3 (CAN API V3).
 /// \note   To implement a MacCAN driver derive a class from abstract class
 ///         CMacCAN, and override all pure virtual functions and optionally
 ///         the static function 'ProbeChannel'.

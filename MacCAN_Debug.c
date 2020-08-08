@@ -112,7 +112,7 @@ int can_log_close(void) {
     return rc;
 }
 
-int can_log_write(uint8_t *buffer, size_t nbyte, const char *prefix) {
+int can_log_write(unsigned char *buffer, size_t nbyte, const char *prefix) {
     int i = (-1);
 #if (OPTION_MACCAN_LOGGER > 0)
     if (!fp)
