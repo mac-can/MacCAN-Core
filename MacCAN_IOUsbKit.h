@@ -116,6 +116,7 @@ typedef struct usb_pipe_t_ {
     CANUSB_MsgQueue_t msgQueue;
     CANUSB_MsgParam_t ptrParam;
     CANUSB_Callback_t callback;
+    UInt8 canChannel;
     UInt16 options;
     Boolean running;
 } CANUSB_UsbPipe_t;

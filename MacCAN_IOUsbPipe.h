@@ -37,11 +37,12 @@
 #define CANUSB_INFINITE  (65535U)
 
 /* macro to set up a MacCAN pipe context */
-#define CANUSB_PIPE_CONTEXT(ptr,hnd,ref,cbk,para) \
+#define CANUSB_PIPE_CONTEXT(ptr,hnd,ref,cbk,can,para) \
                             do{ if (ptr) { \
                                     (ptr)->handle = hnd; \
                                     (ptr)->pipeRef = ref; \
                                     (ptr)->callback = cbk; \
+                                    (ptr)->canChannel = can; \
                                     (ptr)->ptrParam = para; \
                             } } while(0)
 #define CANUSB_PIPE_RUNNING(pipe)  pipe.running
