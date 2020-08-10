@@ -143,13 +143,13 @@ extern CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle);
 
 extern CANUSB_Return_t CANUSB_DeviceRequest(CANUSB_Handle_t handle, CANUSB_SetupPacket_t setupPacket, void *buffer, UInt16 size, UInt32 *transferred);
 
-extern CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size);
+extern CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size, UInt16 timeout);
 
 extern CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_Handle_t handle, UInt8 pipeRef, CANUSB_UsbPipe_t *usbPipe);
 
 extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_Handle_t handle, UInt8 pipeRef);
 
-extern CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 size);
+extern CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const void *buffer, UInt32 size, UInt16 timeout);
 
 extern CANUSB_Index_t CANUSB_GetFirstDevice(void);
 

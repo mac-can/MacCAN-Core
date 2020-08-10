@@ -52,6 +52,7 @@
 #define VERSION_PATCH     1
 
 /*#define SINGLE_CAN_CHANNEL  !* activate it, if needed */
+/*#define TIMEOUT_UNSUPPORTED  !* activate it, if needed */
 /*#define PRINT_USB_PIPE_INFO  !* activate it, if needed */
 
 #define IS_INDEX_VALID(idx)  ((0 <= (idx)) && ((idx) < CANUSB_MAX_DEVICES))
@@ -432,10 +433,15 @@ CANUSB_Return_t CANUSB_DeviceRequest(CANUSB_Handle_t handle, CANUSB_SetupPacket_
     return ret;
 }
 
-CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size) {
+CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size, UInt16 timeout) {
     IOReturn kr;
     int ret = 0;
-    
+#ifdef TIMEOUT_UNSUPPORTED
+    (void)timeout;
+#else
+    UInt32 noDataTimeout = (UInt32)timeout;
+    UInt32 completionTimeout = (UInt32)(((UInt32)timeout * (UInt32)110) / (UInt32)100);
+#endif
     /* must be initialized */
     if (!fInitialized)
         return CANUSB_ERROR_NOTINIT;
@@ -455,8 +461,19 @@ CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buf
         (usbDevice[handle].usbInterface.nOpened != 0U) &&
 #endif
         (usbDevice[handle].usbInterface.ioInterface != NULL)) {
+#ifdef TIMEOUT_UNSUPPORTED
+        /* note: activate define if ReadPipeTO() is not available in IOUSBInterfaceStructXYZ for the device. */
         kr = (*usbDevice[handle].usbInterface.ioInterface)->ReadPipe(usbDevice[handle].usbInterface.ioInterface,
                                                                      pipeRef, buffer, size);
+#else
+        if (timeout)
+            kr = (*usbDevice[handle].usbInterface.ioInterface)->ReadPipeTO(usbDevice[handle].usbInterface.ioInterface,
+                                                                           pipeRef, buffer, size,
+                                                                           noDataTimeout, completionTimeout);
+        else
+            kr = (*usbDevice[handle].usbInterface.ioInterface)->ReadPipe(usbDevice[handle].usbInterface.ioInterface,
+                                                                         pipeRef, buffer, size);
+#endif
         if (kIOReturnSuccess != kr) {
             MACCAN_DEBUG_ERROR("+++ Unable to read pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
@@ -623,10 +640,15 @@ CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_Handle_t handle, UInt8 pipeRef)
     return ret;
 }
 
-CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 size) {
+CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const void *buffer, UInt32 size, UInt16 timeout) {
     IOReturn kr;
     int ret = 0;
-    
+#ifdef TIMEOUT_UNSUPPORTED
+    (void)timeout;
+#else
+    UInt32 noDataTimeout = (UInt32)timeout;
+    UInt32 completionTimeout = (UInt32)timeout + (UInt32)100;
+#endif
     /* must be initialized */
     if (!fInitialized)
         return CANUSB_ERROR_NOTINIT;
@@ -653,8 +675,19 @@ CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *bu
             LEAVE_CRITICAL_SECTION(handle);
             return CANUSB_ERROR_RESOURCE;
         }
+#ifdef TIMEOUT_UNSUPPORTED
+        /* note: activate define if WritePipeTO() is not available in IOUSBInterfaceStructXYZ for the device. */
         kr = (*usbDevice[handle].usbInterface.ioInterface)->WritePipe(usbDevice[handle].usbInterface.ioInterface,
-                                                                      pipeRef, buffer, size);
+                                                                      pipeRef, (void*)buffer, size);
+#else
+        if (timeout)
+            kr = (*usbDevice[handle].usbInterface.ioInterface)->WritePipeTO(usbDevice[handle].usbInterface.ioInterface,
+                                                                            pipeRef, (void*)buffer, size,
+                                                                            noDataTimeout, completionTimeout);
+        else
+            kr = (*usbDevice[handle].usbInterface.ioInterface)->WritePipe(usbDevice[handle].usbInterface.ioInterface,
+                                                                          pipeRef, (void*)buffer, size);
+#endif
         if (kIOReturnSuccess != kr) {
             MACCAN_DEBUG_ERROR("+++ Unable to write pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
