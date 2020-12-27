@@ -1,5 +1,5 @@
 /*
- *  MacCAN - macOS User-Space Driver for CAN to USB Interfaces
+ *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
  *  Copyright (C) 2012-2020  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *

@@ -1,5 +1,5 @@
 /*
- *  MacCAN - macOS User-Space Driver for CAN to USB Interfaces
+ *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
  *  Copyright (C) 2012-2020  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *
@@ -21,7 +21,7 @@
 #ifndef MACCAN_IOUSBKIT_H_INCLUDED
 #define MACCAN_IOUSBKIT_H_INCLUDED
 
-#include <MacTypes.h>
+#include "MacCAN_Common.h"
 
 #ifndef CANUSB_MAX_DEVICES
 #define CANUSB_MAX_DEVICES  42
@@ -57,50 +57,12 @@
 #define USBREQ_RECIPIENT_ENDPOINT   0x02U
 #define USBREQ_RECIPIENT_OTHER      0x03U
 
-/* CAN API V3 compatible error codes */
-#define CANUSB_ERROR_RESOURCE (-90)
-#define CANUSB_ERROR_reserved (-91)
-#define CANUSB_ERROR_HANDLE   (-92)
-#define CANUSB_ERROR_ILLPARA  (-93)
-#define CANUSB_ERROR_NULLPTR  (-94)
-#define CANUSB_ERROR_NOTINIT  (-95)
-#define CANUSB_ERROR_YETINIT  (-96)
-#define CANUSB_ERROR_LIBRARY  (-97)
-#define CANUSB_ERROR_NOTSUPP  (-98)
-#define CANUSB_ERROR_FATAL    (-99)
-#define CANUSB_ERROR_OK         (0)
-#define CANUSB_SUCCESS  CANUSB_ERROR_OK
-
 typedef int CANUSB_Index_t;
 typedef int CANUSB_Handle_t;
 typedef int CANUSB_Return_t;
 
-typedef void (*CANUSB_Callback_t)(void *refCon, UInt8 *buffer, UInt32 nbyte);
-
-typedef struct msg_queue_t_ {
-    UInt32 size;
-    UInt32 used;
-    UInt32 head;
-    UInt32 tail;
-    UInt8 *queueElem;
-    size_t elemSize;
-    struct cond_wait_t {
-        pthread_mutex_t mutex;
-        pthread_cond_t cond;
-        Boolean flag;
-    } wait;
-    struct overflow_t {
-        Boolean flag;
-        UInt64 counter;
-    } ovfl;
-} CANUSB_MsgQueue_t;
-
-typedef struct msg_pipe_t_ {
-    int fildes[2];
-    int flag;  /* Cesi n'est pas une pipe;) */
-} CANUSB_MsgPipe_t;
-
-typedef void* CANUSB_MsgParam_t;
+typedef void *CANUSB_Context_t;
+typedef void (*CANUSB_Callback_t)(CANUSB_Context_t refCon, UInt8 *buffer, UInt32 nbyte);
 
 typedef struct usb_buffer_t_ {
     UInt8 *data[2];
@@ -112,14 +74,10 @@ typedef struct usb_pipe_t_ {
     UInt8 pipeRef;
     CANUSB_Handle_t handle;
     CANUSB_Buffer_t buffer;
-    CANUSB_MsgPipe_t msgPipe;
-    CANUSB_MsgQueue_t msgQueue;
-    CANUSB_MsgParam_t ptrParam;
     CANUSB_Callback_t callback;
-    UInt8 canChannel;
-    UInt16 options;
+    CANUSB_Context_t context;
     Boolean running;
-} CANUSB_UsbPipe_t;
+} *CANUSB_AsyncPipe_t;
 
 typedef struct usb_setup_packet_t_ {
     UInt8  RequestType;
@@ -145,11 +103,15 @@ extern CANUSB_Return_t CANUSB_DeviceRequest(CANUSB_Handle_t handle, CANUSB_Setup
 
 extern CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size, UInt16 timeout);
 
-extern CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_Handle_t handle, UInt8 pipeRef, CANUSB_UsbPipe_t *usbPipe);
-
-extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_Handle_t handle, UInt8 pipeRef);
-
 extern CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const void *buffer, UInt32 size, UInt16 timeout);
+
+extern CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef, size_t bufferSize);
+
+extern CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe);
+
+extern CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, CANUSB_Callback_t callback, CANUSB_Context_t context);
+
+extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_AsyncPipe_t asyncPipe);
 
 extern CANUSB_Index_t CANUSB_GetFirstDevice(void);
 
