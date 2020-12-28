@@ -267,7 +267,7 @@ public:
     //
     /// \returns     0 if successful, or a negative value on error.
     //
-    virtual MacCAN_Return_t GetProperty(uint16_t param, void *value, uint32_t nbytes) = 0;
+    virtual MacCAN_Return_t GetProperty(uint16_t param, void *value, uint32_t nbyte) = 0;
 
     /// \brief       modifies a property value of the CAN interface.
     //
@@ -277,7 +277,7 @@ public:
     //
     /// \returns     0 if successful, or a negative value on error.
     //
-    virtual MacCAN_Return_t SetProperty(uint16_t param, const void *value, uint32_t nbytes) = 0;
+    virtual MacCAN_Return_t SetProperty(uint16_t param, const void *value, uint32_t nbyte) = 0;
 
     /// \brief       retrieves the hardware version of the CAN controller
     ///              board as a zero-terminated string.
