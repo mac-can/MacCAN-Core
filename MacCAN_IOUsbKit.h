@@ -131,6 +131,8 @@ extern CANUSB_Return_t CANUSB_GetDeviceReleaseNo(CANUSB_Index_t index, UInt16 *v
 
 extern CANUSB_Return_t CANUSB_GetDeviceNumCanChannels(CANUSB_Index_t index, UInt8 *value);
 
+extern CANUSB_Return_t CANUSB_GetDeviceCanChannelsOpened(CANUSB_Index_t index, UInt8 *value);
+
 extern CANUSB_Return_t CANUSB_GetDeviceLocation(CANUSB_Index_t index, UInt32 *value);
 
 extern CANUSB_Return_t CANUSB_GetDeviceAddress(CANUSB_Index_t index, UInt16 *value);
