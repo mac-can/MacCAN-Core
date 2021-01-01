@@ -1,7 +1,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (C) 2012-2020  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (C) 2012-2021  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *
  *  This file is part of MacCAN-Core.
  *
@@ -319,9 +319,9 @@ public:
 public:
     /// \brief       initializes the IOUsbKit to be used by a MacCAN driver.
     //
-    /// \note        A CAN device identification list of type \ref MacCAN_Device_t
-    ///              (an array with pairs of { <vendorId>, <productId> }, terminated
-    ///              by a pair of { (-1), (-1) }) has to be provide.
+    /// \note        A CAN device identification list of name \ref CANDEV_Devices
+    ///              (an array with tuples of { <vendorId>, <productId>, <numChannels> },
+    ///              terminated by a tuple of { (-1), (-1), 0 }) has to be provide.
     //
     /// \remarks     This method must be called at the beginning of a MacCAN application
     ///              or in the initializer function of a dynamic library.

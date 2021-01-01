@@ -1,7 +1,7 @@
 //
 //  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
 //
-//  Copyright (C) 2012-2020  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+//  Copyright (C) 2012-2021  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
 //
 //  This file is part of MacCAN-Core.
 //
@@ -106,7 +106,7 @@ EXPORT
 char *CMacCAN::GetVersion() {
     static char string[CANPROP_MAX_BUFFER_SIZE] = "The torture never stops.";
     UInt32 version = CANUSB_GetVersion();
-    sprintf(string, "macOS Driver Kit for CAN to USB Interfaces (MacCAN Core %u.%u.%u)",
+    sprintf(string, "macOS Driver Kit for USB-to-CAN Interfaces (MacCAN Core %u.%u.%u)",
                     (UInt8)(version >> 24), (UInt8)(version >> 16), (UInt8)(version >> 8));
     return (char *)string;
 }
