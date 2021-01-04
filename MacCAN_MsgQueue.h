@@ -51,11 +51,13 @@ extern CANQUE_MsgQueue_t CANQUE_Create(size_t numElem, size_t elemSize);
 
 extern CANQUE_Return_t CANQUE_Destroy(CANQUE_MsgQueue_t msgQueue);
 
-extern CANQUE_Return_t CANQUE_Reset(CANQUE_MsgQueue_t msgQueue);
+extern CANQUE_Return_t CANQUE_Signal(CANQUE_MsgQueue_t msgQueue);
 
 extern CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message/*, UInt16 timeout*/);
 
 extern CANQUE_Return_t CANQUE_Dequeue(CANQUE_MsgQueue_t msgQueue, void *message, UInt16 timeout);
+
+extern CANQUE_Return_t CANQUE_Reset(CANQUE_MsgQueue_t msgQueue);
 
 extern Boolean CANQUE_OverflowFlag(CANQUE_MsgQueue_t msgQueue);
 

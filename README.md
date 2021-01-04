@@ -137,6 +137,23 @@ public:
     ///
     virtual MacCAN_Return_t TeardownChannel() = 0;
 
+    /// \brief       signals waiting event objects of the CAN interface. This can
+    ///              be used to terminate blocking operations in progress
+    ///              (e.g. by means of a Ctrl-C handler or similar).
+    //
+    /// \remarks     Some drivers are using waitable objects to realize blocking
+    ///              operations by a call to WaitForSingleObject (Windows) or
+    ///              pthread_cond_wait (POSIX), but these waitable objects are
+    ///              no cancellation points. This means that they cannot be
+    ///              terminated by Ctrl-C (SIGINT).
+    //
+    /// \note        Even though this is not the case with Darwin, we support
+    ///              this feature for compatibility reasons..
+    //
+    /// \returns     0 if successful, or a negative value on error.
+    ///
+    virtual MacCAN_Return_t SignalChannel() = 0;
+
     /// \brief       initializes the operation mode and the bit-rate settings of the
     ///              CAN interface and sets the operation state of the CAN controller
     ///              to 'running'.
