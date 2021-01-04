@@ -113,6 +113,8 @@ extern CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, C
 
 extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_AsyncPipe_t asyncPipe);
 
+extern Boolean CANUSB_IsPipeAsyncRunning(CANUSB_AsyncPipe_t asyncPipe);
+
 extern CANUSB_Index_t CANUSB_GetFirstDevice(void);
 
 extern CANUSB_Index_t CANUSB_GetNextDevice(void);

@@ -772,6 +772,21 @@ CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_AsyncPipe_t asyncPipe) {
     return ret;
 }
 
+Boolean CANUSB_IsPipeAsyncRunning(CANUSB_AsyncPipe_t asyncPipe) {
+    
+    /* must be initialized */
+    if (!fInitialized)
+        return false;
+    /* check for NULL pointer */
+    if (!asyncPipe)
+        return false;
+    /* must be a valid handle */
+    if (!IS_HANDLE_VALID(asyncPipe->handle))
+        return false;
+    /* return true when running, false otherwise */
+    return asyncPipe->running;
+}
+
 CANUSB_Index_t CANUSB_GetFirstDevice(void) {
     CANUSB_Index_t index = CANUSB_INVALID_INDEX;
 
