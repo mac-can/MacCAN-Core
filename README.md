@@ -300,7 +300,7 @@ public:
 
 ### SVN Repo
 
-The MacCAN-Core sources are maintained in a SVN repo to synchronized them between the different MacCAN driver repos via Git SVN bridge.
+The MacCAN-Core sources are maintained in a SVN repo to synchronized them between the different MacCAN driver repos.
 
 ### License
 
@@ -324,12 +324,6 @@ PCAN is a registered trademark of PEAK-System Technik GmbH, Darmstadt, Germany. 
 Qt is a registered trademark of The Qt Company Ltd. and its subsidiaries.
 
 ### Contact
-
-Uwe Vogt \
-UV Software \
-Chausseestrasse 33a \
-10115 Berlin \
-Germany
 
 E-Mail: mailto://info@mac.can.com \
 Internet: https://www.mac-can.com
