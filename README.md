@@ -49,6 +49,12 @@ The driver for TouCAN USB interfaces from Rusoku is the first driver implementat
 And it is open source;
 goto https://github.com/mac-can/RusokuCAN/.
 
+### CAN Leaf Interfaces from Kvaser
+
+Welcome the MacCAN-KvaserCAN driver for CAN Leaf interfaces from [Kvaser](https://www.kvaser.com) as the next member of the MacCAN family.
+Find its source code on GitHub;
+goto https://github.com/mac-can/MacCAN-KvaserCAN/.
+
 ## HowTo
 
 ### MacCAN API Specification
@@ -321,7 +327,8 @@ along with MacCAN-Core.  If not, see <http://www.gnu.org/licenses/>.
 
 Mac and macOS are trademarks of Apple Inc., registered in the U.S. and other countries. \
 PCAN is a registered trademark of PEAK-System Technik GmbH, Darmstadt, Germany. \
-Qt is a registered trademark of The Qt Company Ltd. and its subsidiaries.
+Qt is a registered trademark of The Qt Company Ltd. and its subsidiaries. \
+All other company, product and service names mentioned herein are trademarks, registered trademarks or service marks of their respective owners.
 
 ### Contact
 
