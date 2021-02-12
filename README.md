@@ -25,7 +25,7 @@ But that poor boy only owned a Mac.
 In the absence of a CAN driver for Mac, I started developing an OS X user space driver for my PEAK USB-to-CAN dongle.
 Many thanks to Uwe Wilhelm, CEO of PEAK-System Technik GmbH, who had supported me with technical information and several hardware.
 
-### PCBUSB Library
+### PCBUSB Library for PEAK´s PCAN-USB Interfaces
 
 The _PCBUSB_ library realizes a USB user-space driver under macOS for PCAN&reg; USB interfaces from PEAK-System Technik.
 See the [MacCAN](https://www.mac-can.com) website for further information, downloads and links.
