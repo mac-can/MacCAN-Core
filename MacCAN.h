@@ -327,7 +327,7 @@ public:
 /// \brief  Methods for DLC conversion.
 /// \{
 public:
-    static uint8_t DLc2Len(uint8_t dlc);
+    static uint8_t Dlc2Len(uint8_t dlc);
     static uint8_t Len2Dlc(uint8_t len);
 /// \}
 
