@@ -630,7 +630,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0)
 {
     CANUSB_AsyncPipe_t asyncPipe = (CANUSB_AsyncPipe_t)refCon;
     UInt8 *buffer, index;
-    UInt32 length = (UInt32)arg0;
+    UInt64 length = (UInt64)arg0;
     IOReturn kr;
     
     switch(result)
@@ -661,7 +661,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0)
             }
             /* call the CALLBACK routine with the referenced pipe context */
             if (asyncPipe->callback && length) {
-                asyncPipe->callback(asyncPipe->context, buffer, length);
+                asyncPipe->callback(asyncPipe->context, buffer, (UInt32)length);
             }
         }
         break;
