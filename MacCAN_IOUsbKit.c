@@ -50,7 +50,7 @@
 
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     2
-#define VERSION_PATCH     0
+#define VERSION_PATCH     1
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
 /*#define OPTION_MACCAN_PIPE_TIMEOUT  0  !* set globally: 0 = do not use xxxPipeTO variant (e.g. macOS < 10.15) */
@@ -128,19 +128,19 @@ CANUSB_Return_t CANUSB_Initialize(void){
         bzero(&usbDevice[index], sizeof(USBDevice_t));
         usbDevice[index].fPresent = false;
         /* create a mutex for each device */
-        if((rc = pthread_mutex_init(&usbDevice[index].ptMutex, NULL)) < 0)
+        if(pthread_mutex_init(&usbDevice[index].ptMutex, NULL) < 0)
             goto error_initialize;
     }
     /* create a mutex and a thread for the driver */
-    if ((rc = pthread_mutex_init(&usbDriver.ptMutex, NULL)) < 0)
+    if (pthread_mutex_init(&usbDriver.ptMutex, NULL) < 0)
         goto error_initialize;
-    if ((rc = pthread_attr_init(&attr)) != 0)
+    if (pthread_attr_init(&attr) != 0)
         goto error_initialize;
-    if ((rc = pthread_attr_setstacksize(&attr, 64*1024)) != 0)
+    if (pthread_attr_setstacksize(&attr, 64*1024) != 0)
         goto error_initialize;
-    if ((rc = pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED)) != 0)
+    if (pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED) != 0)
         goto error_initialize;
-    if ((rc = pthread_attr_setschedpolicy(&attr, SCHED_RR)) != 0)
+    if (pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0)
         goto error_initialize;
     rc = pthread_create(&usbDriver.ptThread, &attr, WorkerThread, NULL);
     assert(pthread_attr_destroy(&attr) == 0);
@@ -155,7 +155,7 @@ CANUSB_Return_t CANUSB_Initialize(void){
         assert(0 == pthread_mutex_lock(&usbDriver.ptMutex));
         fInitialized = usbDriver.fRunning;
         assert(0 == pthread_mutex_unlock(&usbDriver.ptMutex));
-    } while (!fInitialized && (time(NULL) < now+5));
+    } while (!fInitialized && (time(NULL) < (now + 5/*seconds*/)));
     return (fInitialized ? 0 : CANUSB_ERROR_NOTINIT);
 
 error_initialize:
