@@ -1,7 +1,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (C) 2012-2020  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (C) 2012-2021  Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *
  *  This file is part of MacCAN-Core.
  *
@@ -90,9 +90,9 @@ int can_log_open(const char *filename) {
     if ((rc = pthread_mutex_init(&mt, NULL)) < 0)
         return rc;
     if (filename)
-        fp = fopen(filename, "w");
+        fp = fopen(filename, MACCAN_LOG_MODE);
     else
-        fp = fopen(MACCAN_LOG_FILE, "w");
+        fp = fopen(MACCAN_LOG_FILE, MACCAN_LOG_MODE);
     rc = (fp) ? 0 : (-1);
 #else
     if (filename) { rc = (-1); } /* to avoid compiler warnings */
