@@ -1,6 +1,6 @@
 ### Creation of USB User-Space Drivers for CAN Interfaces under macOS&reg;
 
-_Copyright &copy; 2012-2021   Uwe Vogt, UV Software, Berlin (info@mac-can.com)_
+_Copyright &copy; 2012-2021  Uwe Vogt, UV Software, Berlin (info@mac-can.com)_
 
 Version $Rev$
 
@@ -330,6 +330,4 @@ All other company, product and service names mentioned herein are trademarks, re
 ### Contact
 
 E-Mail: mailto://info@mac.can.com \
-Internet: https://www.mac-can.com
-
-##### *Have a lot of fun!*
+Internet: https://www.mac-can.net

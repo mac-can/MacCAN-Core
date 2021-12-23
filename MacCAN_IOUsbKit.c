@@ -1430,7 +1430,12 @@ static int SetupDirectory(SInt32 vendorID, SInt32 productID)
     kern_return_t           kr;
 
     /* Create a master port for communication with the I/O Kit */
+#if (__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_12_0)
+    kr = IOMainPort(MACH_PORT_NULL, &masterPort);
+#else
+    /*  'IOMasterPort' is deprecated: first deprecated in macOS 12.0 */
     kr = IOMasterPort(MACH_PORT_NULL, &masterPort);
+#endif
     if (kr || !masterPort)
     {
         MACCAN_DEBUG_ERROR("+++ Couldn't create a master I/O Kit port (%08x)\n", kr);
