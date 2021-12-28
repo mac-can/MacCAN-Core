@@ -157,6 +157,7 @@ public:
         NullPointer = CANERR_NULLPTR,  ///< null-pointer assignment
         NotInitialized = CANERR_NOTINIT,  ///< not initialized
         AlreadyInitialized = CANERR_YETINIT,  ///< already initialized
+        InvalidLibrary = CANERR_LIBRARY, ///< illegal library
         NotSupported = CANERR_NOTSUPP,  ///< not supported
         FatalError = CANERR_FATAL,  ///< fatal error
         VendorSpecific = CANERR_VENDOR  ///< offset for vendor-specific error code
