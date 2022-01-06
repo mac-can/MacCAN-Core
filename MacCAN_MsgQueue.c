@@ -258,7 +258,7 @@ static Boolean EnqueueElement(CANQUE_MsgQueue_t queue, const void *element) {
         (void)memcpy(&queue->queueElem[(queue->tail * queue->elemSize)], element, queue->elemSize);
         queue->used += 1U;
         if (queue->high < queue->used)
-            queue->high = queue->high;
+            queue->high = queue->used;
         return true;
     } else {
         queue->ovfl.counter += 1U;
