@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2021 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -148,7 +148,9 @@ extern CANUSB_Index_t CANUSB_GetNextDevice(void);
 
 extern Boolean CANUSB_IsDevicePresent(CANUSB_Index_t index);
 
-extern Boolean CANUSB_IsDeviceOpened(CANUSB_Index_t index);
+extern Boolean CANUSB_IsDeviceInUse(CANUSB_Index_t index);
+
+extern Boolean CANUSB_IsDeviceOpened(CANUSB_Index_t index);  // deprecated
 
 extern CANUSB_Return_t CANUSB_GetDeviceName(CANUSB_Index_t index, char *buffer, size_t n);
 
