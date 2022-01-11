@@ -76,8 +76,8 @@
 #include <IOKit/usb/USB.h>
 
 #define VERSION_MAJOR     0
-#define VERSION_MINOR     2
-#define VERSION_PATCH     3
+#define VERSION_MINOR     3
+#define VERSION_PATCH     0
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
 /*#define OPTION_MACCAN_PIPE_TIMEOUT  0  !* set globally: 0 = do not use xxxPipeTO variant (e.g. macOS < 10.15) */
