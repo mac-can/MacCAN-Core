@@ -1,6 +1,6 @@
 ### Creation of USB User-Space Drivers for CAN Interfaces under macOS&reg;
 
-_Copyright &copy; 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)_ \
+_Copyright &copy; 2012-2022  Uwe Vogt, UV Software, Berlin (info@mac-can.com)_ \
 _All rights reserved._
 
 Version $Rev$
@@ -50,7 +50,7 @@ See [Rusoku](https://www.rusoku.com)´s website for the products and the service
 
 The [MacCAN-TouCAN driver](https://mac-can.github.io/drivers/RusokuCAN/) for TouCAN USB interfaces from Rusoku is the first driver implementation based on MacCAN-Core.
 And it is open source;
-goto https://github.com/mac-can/RusokuCAN.dylib.
+goto https://github.com/mac-can/RusokuCAN/.
 
 ### CAN Leaf Interfaces from Kvaser
 
@@ -59,7 +59,7 @@ They offer a wide range of CAN hardware and CAN software, mainly for application
 
 Welcome the [MacCAN-KvaserCAN driver](https://mac-can.github.io/drivers/KvaserCAN/) for CAN Leaf interfaces from Kvaser as the next member of the MacCAN family.
 Find its source code on GitHub;
-goto https://github.com/mac-can/KvaserCAN-Library.
+goto https://github.com/mac-can/MacCAN-KvaserCAN/.
 
 ## HowTo
 
