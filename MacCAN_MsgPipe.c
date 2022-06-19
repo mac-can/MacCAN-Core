@@ -68,7 +68,7 @@
 CANPIP_MsgPipe_t CANPIP_Create(void) {
     CANPIP_MsgPipe_t msgPipe = NULL;
 
-    MACCAN_DEBUG_DRIVER("        - Message pipe of size %u bytes\n", PIPE_BUF);
+    MACCAN_DEBUG_CORE("        - Message pipe of size %u bytes\n", PIPE_BUF);
     if ((msgPipe = (CANPIP_MsgPipe_t)malloc(sizeof(struct msg_pipe_t_))) == NULL) {
         MACCAN_DEBUG_ERROR("+++ Unable to create message pipe (NULL pointer)\n");
         return NULL;

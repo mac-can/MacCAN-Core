@@ -79,7 +79,7 @@ static Boolean DequeueElement(CANQUE_MsgQueue_t queue, void *element);
 CANQUE_MsgQueue_t CANQUE_Create(size_t numElem, size_t elemSize) {
     CANQUE_MsgQueue_t msgQueue = NULL;
 
-    MACCAN_DEBUG_DRIVER("        - Message queue for %u elements of size %u bytes\n", numElem, elemSize);
+    MACCAN_DEBUG_CORE("        - Message queue for %u elements of size %u bytes\n", numElem, elemSize);
     if ((msgQueue = (CANQUE_MsgQueue_t)malloc(sizeof(struct msg_queue_t_))) == NULL) {
         MACCAN_DEBUG_ERROR("+++ Unable to create message queue (NULL pointer)\n");
         return NULL;
