@@ -82,7 +82,13 @@
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
 /*#define OPTION_MACCAN_PIPE_TIMEOUT  0  !* set globally: 0 = do not use xxxPipeTO variant (e.g. macOS < 10.15) */
 /*#define OPTION_MACCAN_PIPE_INFO  !* activate it, if needed */
-
+#ifndef OPTION_MACCAN_CLEAR_BOTH_ENDS
+#if defined(__MAC_11_0)
+#define OPTION_MACCAN_CLEAR_BOTH_ENDS  1  /* clear halt endpoint: 1 = both ends, 0 = only one end */
+#else
+#define OPTION_MACCAN_CLEAR_BOTH_ENDS  0  /* ClearPipeStallBothEnds() not available in macOS < 11 */
+#endif
+#endif
 #define IS_INDEX_VALID(idx)  ((0 <= (idx)) && ((idx) < CANUSB_MAX_DEVICES))
 #define IS_HANDLE_VALID(hnd)  IS_INDEX_VALID(hnd)
 
@@ -619,7 +625,7 @@ CANUSB_Return_t CANUSB_ResetPipe(CANUSB_Handle_t handle, UInt8 pipeRef) {
             MACCAN_DEBUG_FUNC("unlocked\n");
             return CANUSB_ERROR_RESOURCE;
         }
-#if (OPTION_MACCAN_CLEAR_BOTH_ENDS != 0)
+#if (OPTION_MACCAN_CLEAR_BOTH_ENDS == 0)
         kr = (*usbDevice[handle].usbInterface.ioInterface)->ClearPipeStall(usbDevice[handle].usbInterface.ioInterface,
                                                                            pipeRef);
 #else
