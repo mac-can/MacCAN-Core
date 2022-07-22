@@ -82,6 +82,12 @@
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
 /*#define OPTION_MACCAN_PIPE_TIMEOUT  0  !* set globally: 0 = do not use xxxPipeTO variant (e.g. macOS < 10.15) */
 /*#define OPTION_MACCAN_PIPE_INFO  !* activate it, if needed */
+
+#ifdef OPTION_MACCAN_PIPE_TIMEOUT
+#if !defined(__MAC_11_0)
+#undef OPTION_MACCAN_PIPE_TIMEOUT      /* xxxPipeTO() not available in macOS < 11 */
+#endif
+#endif
 #ifndef OPTION_MACCAN_CLEAR_BOTH_ENDS
 #if defined(__MAC_11_0)
 #define OPTION_MACCAN_CLEAR_BOTH_ENDS  1  /* clear halt endpoint: 1 = both ends, 0 = only one end */
@@ -89,6 +95,7 @@
 #define OPTION_MACCAN_CLEAR_BOTH_ENDS  0  /* ClearPipeStallBothEnds() not available in macOS < 11 */
 #endif
 #endif
+
 #define IS_INDEX_VALID(idx)  ((0 <= (idx)) && ((idx) < CANUSB_MAX_DEVICES))
 #define IS_HANDLE_VALID(hnd)  IS_INDEX_VALID(hnd)
 
@@ -483,8 +490,8 @@ CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buf
 #if (OPTION_MACCAN_PIPE_TIMEOUT == 0)
     (void)timeout;
 #else
-    UInt32 noDataTimeout = (UInt32)timeout;
-    UInt32 completionTimeout = (UInt32)(((UInt32)timeout * (UInt32)110) / (UInt32)100);
+    UInt32 noDataTimeout = (UInt32)(((UInt32)timeout * (UInt32)2) / (UInt32)5);
+    UInt32 completionTimeout = (UInt32)timeout;
 #endif
     /* must be initialized */
     if (!fInitialized)
@@ -539,8 +546,8 @@ CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const vo
 #if (OPTION_MACCAN_PIPE_TIMEOUT == 0)
     (void)timeout;
 #else
-    UInt32 noDataTimeout = (UInt32)timeout;
-    UInt32 completionTimeout = (UInt32)timeout + (UInt32)100;
+    UInt32 noDataTimeout = (UInt32)timeout - (UInt32)(((UInt32)timeout * (UInt32)2) / (UInt32)5);
+    UInt32 completionTimeout = (UInt32)timeout;
 #endif
     /* must be initialized */
     if (!fInitialized)
