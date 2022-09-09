@@ -76,7 +76,7 @@
 #include <IOKit/usb/USB.h>
 
 #define VERSION_MAJOR     0
-#define VERSION_MINOR     4
+#define VERSION_MINOR     5
 #define VERSION_PATCH     0
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */

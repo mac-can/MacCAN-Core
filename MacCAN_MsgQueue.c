@@ -55,6 +55,12 @@
 #include <unistd.h>
 #include <pthread.h>
 
+/*#define OPTION_MACCAN_FILE_DESCRIPTOR  0  !* set globally: 0 = wait condition, 1 = file descriptor for select() */
+#if (OPTION_MACCAN_FILE_DESCRIPTOR != 0)
+#define PIPO  0
+#define PIPI  1
+#endif
+
 #define GET_TIME(ts)  do{ clock_gettime(CLOCK_REALTIME, &ts); } while(0)
 #define ADD_TIME(ts,to)  do{ ts.tv_sec += (time_t)(to / 1000U); \
                              ts.tv_nsec += (long)(to % 1000U) * (long)1000000; \
@@ -86,8 +92,16 @@ CANQUE_MsgQueue_t CANQUE_Create(size_t numElem, size_t elemSize) {
     }
     bzero(msgQueue, sizeof(struct msg_queue_t_));
     if ((msgQueue->queueElem = calloc(numElem, elemSize))) {
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
+        /* message queue with Posix wait condition */
         if ((pthread_mutex_init(&msgQueue->wait.mutex, NULL) == 0) &&
-            (pthread_cond_init(&msgQueue->wait.cond, NULL)) == 0) {
+            (pthread_cond_init(&msgQueue->wait.cond, NULL)) == 0)
+#else
+        /* message queue with pipe: "Ceci n'est pas une pipe." */
+        if ((pthread_mutex_init(&msgQueue->wait.mutex, NULL) == 0) &&
+            (pipe(msgQueue->wait.fildes)) >= 0)
+#endif
+        {
             msgQueue->elemSize = (size_t)elemSize;
             msgQueue->size = (UInt32)numElem;
             msgQueue->wait.flag = false;
@@ -109,7 +123,14 @@ CANQUE_Return_t CANQUE_Destroy(CANQUE_MsgQueue_t msgQueue) {
     CANQUE_Return_t retVal = CANUSB_ERROR_RESOURCE;
 
     if (msgQueue) {
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
+        /* destroy the wait condition */
         pthread_cond_destroy(&msgQueue->wait.cond);
+#else
+        /* close pipe file decriptors */
+        close(msgQueue->wait.fildes[PIPO]);
+        close(msgQueue->wait.fildes[PIPI]);
+#endif
         pthread_mutex_destroy(&msgQueue->wait.mutex);
         if (msgQueue->queueElem)
             free(msgQueue->queueElem);
@@ -121,27 +142,49 @@ CANQUE_Return_t CANQUE_Destroy(CANQUE_MsgQueue_t msgQueue) {
     return retVal;
 }
 
+#if (OPTION_MACCAN_FILE_DESCRIPTOR != 0)
+int CANQUE_FileDescriptor(CANQUE_MsgQueue_t msgQueue) {
+    if (msgQueue)
+        return msgQueue->wait.fildes[PIPO];
+    else
+        return (-1);
+}
+#endif
+
 CANQUE_Return_t CANQUE_Signal(CANQUE_MsgQueue_t msgQueue) {
     CANQUE_Return_t retVal = CANUSB_ERROR_RESOURCE;
 
     if (msgQueue) {
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
         ENTER_CRITICAL_SECTION(msgQueue);
         SIGNAL_WAIT_CONDITION(msgQueue, false);
         LEAVE_CRITICAL_SECTION(msgQueue);
         retVal = CANUSB_SUCCESS;
+#else
+        retVal = CANUSB_ERROR_NOTSUPP;
+#endif
     } else {
         MACCAN_DEBUG_ERROR("+++ Unable to signal message queue (NULL pointer)\n");
     }
     return retVal;
 }
 
-CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message/*, UInt16 timeout*/) {
+CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message) {
     CANQUE_Return_t retVal = CANUSB_ERROR_RESOURCE;
 
     if (message && msgQueue) {
         ENTER_CRITICAL_SECTION(msgQueue);
         if (EnqueueElement(msgQueue, message)) {
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
+            /* signal the wait condition */
             SIGNAL_WAIT_CONDITION(msgQueue, true);
+#else
+            /* dummy write into pipe */
+            if (!msgQueue->wait.flag) {
+                (void)write(msgQueue->wait.fildes[PIPI], (void*)&msgQueue->wait.flag, sizeof(msgQueue->wait.flag));
+                msgQueue->wait.flag = true;
+            }
+#endif
             retVal = CANUSB_SUCCESS;
         } else {
             retVal = CANUSB_ERROR_FULL;
@@ -155,14 +198,19 @@ CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message/*
 
 CANQUE_Return_t CANQUE_Dequeue(CANQUE_MsgQueue_t msgQueue, void *message, UInt16 timeout) {
     CANQUE_Return_t retVal = CANUSB_ERROR_RESOURCE;
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
     struct timespec absTime;
     int waitCond = 0;
-
     GET_TIME(absTime);
     ADD_TIME(absTime, timeout);
-
+#else
+    (void)timeout;
+#endif
     if (message && msgQueue) {
         ENTER_CRITICAL_SECTION(msgQueue);
+
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
+        /* dequeue one element (with wait condition) */
 dequeue:
         if (DequeueElement(msgQueue, message)) {
             retVal = CANUSB_SUCCESS;
@@ -178,6 +226,19 @@ dequeue:
             }
             retVal = CANUSB_ERROR_EMPTY;
         }
+#else
+        /* dequeue one element (with file descriptor) */
+        if (DequeueElement(msgQueue, message)) {
+            retVal = CANUSB_SUCCESS;
+        } else {
+            retVal = CANUSB_ERROR_EMPTY;
+        }
+        /* dummy read from pipe */
+        if (msgQueue->wait.flag) {
+            (void)read(msgQueue->wait.fildes[PIPO], (void*)&msgQueue->wait.flag, sizeof(msgQueue->wait.flag));
+            msgQueue->wait.flag = false;
+        }
+#endif
         LEAVE_CRITICAL_SECTION(msgQueue);
     } else {
         MACCAN_DEBUG_ERROR("+++ Unable to dequeue message (NULL pointer)\n");

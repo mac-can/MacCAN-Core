@@ -61,7 +61,11 @@ typedef struct msg_queue_t_ {
     size_t elemSize;
     struct cond_wait_t {
         pthread_mutex_t mutex;
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
         pthread_cond_t cond;
+#else
+        int fildes[2];
+#endif
         Boolean flag;
     } wait;
     struct overflow_t {
@@ -82,11 +86,15 @@ extern CANQUE_Return_t CANQUE_Destroy(CANQUE_MsgQueue_t msgQueue);
 
 extern CANQUE_Return_t CANQUE_Signal(CANQUE_MsgQueue_t msgQueue);
 
-extern CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message/*, UInt16 timeout*/);
+extern CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message);
 
 extern CANQUE_Return_t CANQUE_Dequeue(CANQUE_MsgQueue_t msgQueue, void *message, UInt16 timeout);
 
 extern CANQUE_Return_t CANQUE_Reset(CANQUE_MsgQueue_t msgQueue);
+
+#if (OPTION_MACCAN_FILE_DESCRIPTOR != 0)
+extern int CANQUE_FileDescriptor(CANQUE_MsgQueue_t msgQueue);
+#endif
 
 extern Boolean CANQUE_OverflowFlag(CANQUE_MsgQueue_t msgQueue);
 
