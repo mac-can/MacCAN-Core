@@ -55,12 +55,15 @@
 #include <unistd.h>
 #include <pthread.h>
 
+/*#define OPTION_MACCAN_MARK_OVERRUN  1  !* set globally: 1 = mark last message before queue overrun (requires MacCAN_Types.h) */
+#if (OPTION_MACCAN_MARK_OVERRUN != 0)
+#include "MacCAN_Types.h"
+#endif
 /*#define OPTION_MACCAN_FILE_DESCRIPTOR  0  !* set globally: 0 = wait condition, 1 = file descriptor for select() */
 #if (OPTION_MACCAN_FILE_DESCRIPTOR != 0)
 #define PIPO  0
 #define PIPI  1
-#endif
-
+#else
 #define GET_TIME(ts)  do{ clock_gettime(CLOCK_REALTIME, &ts); } while(0)
 #define ADD_TIME(ts,to)  do{ ts.tv_sec += (time_t)(to / 1000U); \
                              ts.tv_nsec += (long)(to % 1000U) * (long)1000000; \
@@ -68,16 +71,15 @@
                                  ts.tv_nsec %= (long)1000000000; \
                                  ts.tv_sec += (time_t)1; \
                              } } while(0)
-
-#define ENTER_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_lock(&queue->wait.mutex))
-#define LEAVE_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_unlock(&queue->wait.mutex))
-
 #define SIGNAL_WAIT_CONDITION(queue,flg)  do{ queue->wait.flag = flg; \
                                                assert(0 == pthread_cond_signal(&queue->wait.cond)); } while(0)
 #define WAIT_CONDITION_INFINITE(queue,res)  do{ queue->wait.flag = false; \
                                                 res = pthread_cond_wait(&queue->wait.cond, &queue->wait.mutex); } while(0)
 #define WAIT_CONDITION_TIMEOUT(queue,abstime,res)  do{ queue->wait.flag = false; \
                                                        res = pthread_cond_timedwait(&queue->wait.cond, &queue->wait.mutex, &abstime); } while(0)
+#endif
+#define ENTER_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_lock(&queue->wait.mutex))
+#define LEAVE_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_unlock(&queue->wait.mutex))
 
 static Boolean EnqueueElement(CANQUE_MsgQueue_t queue, const void *element);
 static Boolean DequeueElement(CANQUE_MsgQueue_t queue, void *element);
@@ -322,6 +324,10 @@ static Boolean EnqueueElement(CANQUE_MsgQueue_t queue, const void *element) {
             queue->high = queue->used;
         return true;
     } else {
+#if (OPTION_MACCAN_MARK_OVERRUN != 0)
+        /* mark the last message before queue overrun (fragile, requires MacCAN_Types.h) */
+        ((CANMSG_CanMessage_t*)&queue->queueElem[(queue->tail * queue->elemSize)])->extra |= CANMSG_FLAG_OVERRUN;
+#endif
         queue->ovfl.counter += 1U;
         queue->ovfl.flag = true;
         return false;

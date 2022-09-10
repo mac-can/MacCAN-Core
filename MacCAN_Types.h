@@ -84,6 +84,12 @@
 #define CANMSG_MAX_FD_LEN               64  /**< max. payload length (CAN FD) */
 /** @} */
 
+/** @name  Internal flags
+ *  @brief Additional message flags for internal use
+ *  @{ */
+#define CANMSG_FLAG_OVERRUN           0x80  /**< flag to mark a queue overrun */
+/** @} */
+
 /** @brief       CAN identifier (11-bit or 29-bit)
  */
 typedef uint32_t CANMSG_CanId_t;
@@ -91,6 +97,10 @@ typedef uint32_t CANMSG_CanId_t;
 /** @brief       Message flags (16-bit, driver-secific)
  */
 typedef uint16_t CANMSG_Flags_t;
+
+/** @brief       Internal flags (8-bit, for internal use)
+ */
+typedef uint8_t  CANMSG_Extra_t;
 
 /** @brief       CAN Data Length Code (0 .. 8 or 15 for CAN FD)
  */
@@ -109,7 +119,7 @@ typedef uint64_t CANMSG_TimeStamp_t;
 typedef struct canmsg_message_t_ {
     CANMSG_CanId_t canId;                   /**< CAN identifier (11-bit or 29-bit) */
     CANMSG_Flags_t flags;                   /**< message flags (16-bit, driver-secific) */
-    uint8_t _reserved;                      /* padding */
+    CANMSG_Extra_t extra;                   /**< additional flags (8-bit, for internal use) */
     CANMSG_CanDlc_t canDlc;                 /**< CAN Data Length Code (0 .. 8 or 15) */
     CANMSG_CanData_t canData[CANMSG_MAX_FD_LEN];  /**< CAN data (to hold CAN FD payload) */
     CANMSG_TimeStamp_t timeStamp;           /**< time-stamp (64-bit, driver-specific) */
