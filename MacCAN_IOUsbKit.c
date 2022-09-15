@@ -216,7 +216,13 @@ CANUSB_Return_t CANUSB_Teardown(void){
 
     /* "Mr. Gorbachev, tear down this wall!" */
     MACCAN_DEBUG_INFO("    Release the MacCAN driver...\n");
+#if (0)
+    /* note: this does not terminate the worker thread! */
     assert(pthread_cancel(usbDriver.ptThread) == 0);
+#else
+    // TODO: switch completely over to CFRunLoop interface
+    CFRunLoopStop(usbDriver.refRunLoop);
+#endif
     usleep(54945);
 
     /* close all USB devices */
@@ -226,7 +232,7 @@ CANUSB_Return_t CANUSB_Teardown(void){
         ENTER_CRITICAL_SECTION(index);
         if (usbDevice[index].fPresent &&
             (usbDevice[index].ioDevice != NULL)) {
-            MACCAN_DEBUG_CORE("    - Device #%i: %s", index, usbDevice[index].szName);
+            MACCAN_DEBUG_CORE("      - Device #%i: %s", index, usbDevice[index].szName);
 #if (OPTION_MACCAN_MULTICHANNEL == 0)
             if (usbDevice[index].usbInterface.fOpened) {
 #else
@@ -1952,8 +1958,13 @@ static void* WorkerThread(void* arg)
     MACCAN_DEBUG_CORE("    - Run loop started so notifications will be received\n");
     CFRunLoopRun();
 
+#if (0)
     /* fatal error: execution should never come here! */
     MACCAN_DEBUG_ERROR("+++ Oops, something went terribly wrong!\a\n");
+#else
+    /* indicate to the creator that the thread is terminated */
+    MACCAN_DEBUG_CORE("    - So long, and thanks for all the fish.\n");
+#endif
     assert(0 == pthread_mutex_lock(&usbDriver.ptMutex));
     usbDriver.fRunning = FALSE;
     assert(0 == pthread_mutex_unlock(&usbDriver.ptMutex));
