@@ -606,7 +606,7 @@ CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const vo
             MACCAN_DEBUG_ERROR("+++ Unable to write pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
             MACCAN_DEBUG_FUNC("unlocked\n");
-            return CANUSB_ERROR_RESOURCE;
+            return CANUSB_ERROR_FULL;
         }
     } else {
         MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
