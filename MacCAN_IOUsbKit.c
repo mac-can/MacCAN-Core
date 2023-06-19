@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -1892,7 +1892,7 @@ static void DeviceRemoved(void *refCon, io_iterator_t iterator)
         /* remove the device from the device list */
         for (index = 0; index < CANUSB_MAX_DEVICES; index++) {
             ENTER_CRITICAL_SECTION(index);
-            if (location == (UInt64)usbDevice[index].u32Location) {
+            if ((UInt32)location == usbDevice[index].u32Location) {
                 MACCAN_DEBUG_CORE("      - Device #%i is %s available (vendor = %03x, product = %03x)\n", index,
                     usbDevice[index].fPresent? "no longer" : "not", usbDevice[index].u16VendorId, usbDevice[index].u16ProductId);
                 if (usbDevice[index].fPresent &&
