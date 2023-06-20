@@ -77,7 +77,8 @@
 
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     5
-#define VERSION_PATCH     144
+#define VERSION_PATCH     0
+#define SVN_REVISION     "$Rev$"
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
 /*#define OPTION_MACCAN_PIPE_TIMEOUT  0  !* set globally: 0 = do not use xxxPipeTO variant (e.g. macOS < 10.15) */
@@ -163,6 +164,7 @@ typedef struct usb_driver_t_ {              /* USB driver: */
     IONotificationPortRef refNotifyPort;    /*   port for notifications */
     io_iterator_t iterBulkDevicePlugged;    /*   iterator for plugged device(s) */
     io_iterator_t iterBulkDeviceUnplugged;  /*   iterator for unplugged device(s) */
+    int nRevision;                          /*   revision number */
 } USBDriver_t;
 
 static USBDriver_t usbDriver;
@@ -206,8 +208,11 @@ CANUSB_Return_t CANUSB_Initialize(void) {
     if (rc != 0)
         goto error_initialize;
 
+    /* get SVN/RCS revision number from expanded keyword (to be used as the build number) */
+    if (sscanf(SVN_REVISION, "\044Rev: %i\044", &usbDriver.nRevision) != 1) usbDriver.nRevision = 0;
+
     /* wait for the driver being loaded (by the created thread) or timed out */
-    MACCAN_DEBUG_INFO("    Loading the MacCAN driver...\n");
+    MACCAN_DEBUG_INFO("    Loading the MacCAN driver (v%u.%u.%u.%i)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, usbDriver.nRevision);
     fInitialized = true;
     now = time(NULL);
     do {
@@ -243,7 +248,7 @@ CANUSB_Return_t CANUSB_Teardown(void) {
         return CANUSB_ERROR_NOTINIT;
 
     /* "Mr. Gorbachev, tear down this wall!" */
-    MACCAN_DEBUG_INFO("    Release the MacCAN driver...\n");
+    MACCAN_DEBUG_INFO("    Release the MacCAN driver (v%u.%u.%u.%i)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, usbDriver.nRevision);
 #if (0)
     /* note: this does not terminate the worker thread! */
     assert(pthread_cancel(usbDriver.ptThread) == 0);
@@ -1653,6 +1658,10 @@ UInt32 CANUSB_GetVersion(void){
     return ((UInt32)VERSION_MAJOR << 24) |
            ((UInt32)VERSION_MINOR << 16) |
            ((UInt32)VERSION_PATCH << 8);
+}
+
+UInt32 CANUSB_GetRevision(void) {
+    return (UInt32)usbDriver.nRevision;
 }
 
 #if (0)

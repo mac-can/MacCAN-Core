@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -179,6 +179,8 @@ extern CANUSB_Return_t CANUSB_GetInterfaceEndpointTransferType(CANUSB_Handle_t h
 extern CANUSB_Return_t CANUSB_GetInterfaceEndpointMaxPacketSize(CANUSB_Handle_t handle, UInt8 index, UInt16 *value);
 
 extern UInt32 CANUSB_GetVersion(void);
+
+extern UInt32 CANUSB_GetRevision(void);
 
 /* === Deprecated === */
 extern Boolean CANUSB_IsDevicePresent(CANUSB_Index_t index);
