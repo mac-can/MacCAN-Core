@@ -105,8 +105,9 @@ typedef enum usb_device_state_tag {
 
 typedef void *CANUSB_Descriptor_t;
 typedef void *CANUSB_Context_t;
-typedef void (*CANUSB_Callback_t)(CANUSB_Context_t refCon, UInt8 *buffer, UInt32 nbyte);
-typedef void (*CANUSB_Plugging_t)(CANUSB_Context_t refCon);
+
+typedef void (*CANUSB_DetachedCbk_t)(CANUSB_Context_t refCon);
+typedef void (*CANUSB_AsyncPipeCbk_t)(CANUSB_Context_t refCon, UInt8 *buffer, UInt32 nbyte);
 
 typedef struct usb_async_pipe_tag *CANUSB_AsyncPipe_t;
 
@@ -124,7 +125,7 @@ extern CANUSB_Handle_t CANUSB_OpenDevice(CANUSB_Index_t index, UInt16 vendorId, 
 
 extern CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle);
 
-extern CANUSB_Return_t CANUSB_RegisterDetachedCallback(CANUSB_Handle_t handle, CANUSB_Plugging_t callback, CANUSB_Context_t context);
+extern CANUSB_Return_t CANUSB_RegisterDetachedCallback(CANUSB_Handle_t handle, CANUSB_DetachedCbk_t callback, CANUSB_Context_t context);
 
 extern CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buffer, UInt32 *size, UInt16 timeout);
 
@@ -136,9 +137,9 @@ extern CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 p
 
 extern CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe);
 
-extern CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, CANUSB_Callback_t callback, CANUSB_Context_t context);
+extern CANUSB_Return_t CANUSB_AbortPipeAsync(CANUSB_AsyncPipe_t asyncPipe);
 
-extern CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_AsyncPipe_t asyncPipe);
+extern CANUSB_Return_t CANUSB_ReadPipeAsync(CANUSB_AsyncPipe_t asyncPipe, CANUSB_AsyncPipeCbk_t callback, CANUSB_Context_t context);
 
 extern Boolean CANUSB_IsPipeAsyncRunning(CANUSB_AsyncPipe_t asyncPipe);
 
@@ -186,6 +187,10 @@ extern UInt32 CANUSB_GetRevision(void);
 extern Boolean CANUSB_IsDevicePresent(CANUSB_Index_t index);
 extern Boolean CANUSB_IsDeviceInUse(CANUSB_Index_t index);
 extern Boolean CANUSB_IsDeviceOpened(CANUSB_Index_t index);
+#define CANUSB_Plugging_t  CANUSB_DetachedCbk_t
+#define CANUSB_Callback_t  CANUSB_AsyncPipeCbk_t
+#define CANUSB_ReadPipeAsyncStart  CANUSB_ReadPipeAsync
+#define CANUSB_ReadPipeAsyncAbort  CANUSB_AbortPipeAsync
 #define CANUSB_GetDeviceName  CANUSB_GetDeviceUsbName
 
 #ifdef __cplusplus

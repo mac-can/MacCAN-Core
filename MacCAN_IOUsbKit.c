@@ -125,7 +125,7 @@ typedef struct usb_async_pipe_tag {         /* Asynchrounous pipe: */
     UInt8 pipeRef;                          /*   pipe number (endpoint) */
     CANUSB_Handle_t handle;                 /*   device handle */
     CANUSB_Buffer_t buffer;                 /*   double buffer */
-    CANUSB_Callback_t callback;             /*   callback from notification function */
+    CANUSB_AsyncPipeCbk_t callback;         /*   callback from notification function */
     CANUSB_Context_t context;               /*   pointer to user context for callback */
     Boolean running;                        /*   flag to indicate the pipe state */
 } *CANUSB_AsyncPipe_t;                      /*   note: forward declaration requires C11 */
@@ -137,7 +137,7 @@ typedef struct usb_interface_t_ {           /* USB interface: */
     UInt8 u8Protocol;                       /*   protocol of the interface (8-bit) */
     UInt8 u8NumEndpoints;                   /*   number of endpoints of the interface */
     IOUSBInterfaceInterface **ioInterface;  /*   interface interface (instance) */
-    CANUSB_Plugging_t cbkDeviceRemoved;     /*   callback when device has been removed */
+    CANUSB_DetachedCbk_t cbkDeviceRemoved;  /*   callback when device has been removed */
     CANUSB_Context_t refDeviceRemoved;      /*   pointer to user context for callback */
 } USBInterface_t;
 
@@ -484,7 +484,7 @@ CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle) {
     return ret;
 }
 
-CANUSB_Return_t CANUSB_RegisterDetachedCallback(CANUSB_Handle_t handle, CANUSB_Plugging_t callback, CANUSB_Context_t context) {
+CANUSB_Return_t CANUSB_RegisterDetachedCallback(CANUSB_Handle_t handle, CANUSB_DetachedCbk_t callback, CANUSB_Context_t context) {
     int ret = 0;
 
     /* must be initialized */
@@ -723,7 +723,7 @@ CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
         return CANUSB_ERROR_HANDLE;
     /* when running then abort */
     if (asyncPipe->running)
-        (void)CANUSB_ReadPipeAsyncAbort(asyncPipe);
+        (void)CANUSB_AbortPipeAsync(asyncPipe);
 
     /* free double buffer and asynchronous pipe context */
     if (asyncPipe->buffer.data[1])
@@ -735,8 +735,7 @@ CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
     return CANUSB_SUCCESS;
 }
 
-static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0)
-{
+static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
     CANUSB_AsyncPipe_t asyncPipe = (CANUSB_AsyncPipe_t)refCon;
     UInt8 *buffer, index;
     UInt64 length = (UInt64)arg0;
@@ -749,6 +748,8 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0)
             if (!IS_HANDLE_VALID(asyncPipe->handle))
                 return;
             if (!usbDevice[asyncPipe->handle].usbInterface.ioInterface)
+                return;
+            if (!asyncPipe->buffer.data[0] || !asyncPipe->buffer.data[1])
                 return;
             if (asyncPipe->buffer.index >= 2)
                 return;
@@ -794,12 +795,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0)
     return;
 }
 
-//CANUSB_Return_t CANUSB_ReadPipeAsyncOnce(CANUSB_AsyncPipe_t asyncPipe, CANUSB_Callback_t callback, CANUSB_Context_t context) {
-//    // TODO: insert coin here
-//    return CANUSB_ERROR_NOTSUPP;
-//}
-
-CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, CANUSB_Callback_t callback, CANUSB_Context_t context) {
+CANUSB_Return_t CANUSB_ReadPipeAsync(CANUSB_AsyncPipe_t asyncPipe, CANUSB_AsyncPipeCbk_t callback, CANUSB_Context_t context) {
     IOReturn kr;
     int ret = 0;
 
@@ -823,10 +819,10 @@ CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, CANUSB_C
     if (usbDevice[asyncPipe->handle].fPresent &&
         (usbDevice[asyncPipe->handle].usbInterface.fOpened) &&
         (usbDevice[asyncPipe->handle].usbInterface.ioInterface != NULL)) {
-        /* register callback function and reception data context */
+        /* register the callback function and the reception data context */
         asyncPipe->callback = callback;
         asyncPipe->context = context;
-        /* preparation of the first asynchronous pipe read event (with out pipe context as reference, 6th argument) */
+        /* preparation of the first asynchronous pipe read event (with our pipe context as reference, 6th argument) */
         kr = (*usbDevice[asyncPipe->handle].usbInterface.ioInterface)->ReadPipeAsync(usbDevice[asyncPipe->handle].usbInterface.ioInterface,
                                                                                      asyncPipe->pipeRef,
                                                                                      asyncPipe->buffer.data[asyncPipe->buffer.index],
@@ -850,7 +846,7 @@ CANUSB_Return_t CANUSB_ReadPipeAsyncStart(CANUSB_AsyncPipe_t asyncPipe, CANUSB_C
     return ret;
 }
 
-CANUSB_Return_t CANUSB_ReadPipeAsyncAbort(CANUSB_AsyncPipe_t asyncPipe) {
+CANUSB_Return_t CANUSB_AbortPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
     IOReturn kr;
     int ret = 0;
 
@@ -904,7 +900,7 @@ Boolean CANUSB_IsPipeAsyncRunning(CANUSB_AsyncPipe_t asyncPipe) {
     return asyncPipe->running;
 }
 
-CANUSB_Index_t CANUSB_GetFirstDevice(void){
+CANUSB_Index_t CANUSB_GetFirstDevice(void) {
     CANUSB_Index_t index = CANUSB_INVALID_INDEX;
 
     /* must be initialized */
@@ -925,7 +921,7 @@ CANUSB_Index_t CANUSB_GetFirstDevice(void){
     return index;
 }
 
-CANUSB_Index_t CANUSB_GetNextDevice(void){
+CANUSB_Index_t CANUSB_GetNextDevice(void) {
     CANUSB_Index_t index = CANUSB_INVALID_INDEX;
 
     /* must be initialized */
@@ -1654,7 +1650,7 @@ CANUSB_Return_t CANUSB_GetInterfaceEndpointMaxPacketSize(CANUSB_Handle_t handle,
     return ret;
 }
 
-UInt32 CANUSB_GetVersion(void){
+UInt32 CANUSB_GetVersion(void) {
     return ((UInt32)VERSION_MAJOR << 24) |
            ((UInt32)VERSION_MINOR << 16) |
            ((UInt32)VERSION_PATCH << 8);
