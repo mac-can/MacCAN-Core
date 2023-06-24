@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -50,29 +50,7 @@
 
 #include "MacCAN_Common.h"
 
-/* -- U Can't Touch This! -- */
-typedef struct msg_queue_t_ {
-    UInt32 size;
-    UInt32 used;
-    UInt32 high;
-    UInt32 head;
-    UInt32 tail;
-    UInt8 *queueElem;
-    size_t elemSize;
-    struct cond_wait_t {
-        pthread_mutex_t mutex;
-#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
-        pthread_cond_t cond;
-#else
-        int fildes[2];
-#endif
-        Boolean flag;
-    } wait;
-    struct overflow_t {
-        Boolean flag;
-        UInt64 counter;
-    } ovfl;
-} *CANQUE_MsgQueue_t;
+typedef struct msg_queue_tag *CANQUE_MsgQueue_t;
 
 typedef int CANQUE_Return_t;
 

@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2022 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -81,6 +81,28 @@
 #define ENTER_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_lock(&queue->wait.mutex))
 #define LEAVE_CRITICAL_SECTION(queue)  assert(0 == pthread_mutex_unlock(&queue->wait.mutex))
 
+struct msg_queue_tag {                  /* Message Queue (w/ elements of user-defined size): */
+    UInt32 size;                        /* - total number of ring-buffer elements */
+    UInt32 used;                        /* - number of used ring-buffer elements */
+    UInt32 high;                        /* - maximum fill rate of the ring-buffer */
+    UInt32 head;                        /* - read position of the ring-buffer */
+    UInt32 tail;                        /* - write position of the ring-buffer */
+    UInt8 *queueElem;                   /* - the ring-buffer itself */
+    size_t elemSize;                    /* - size of an element */
+    struct cond_wait_t {                /* - blocking operation: */
+        pthread_mutex_t mutex;          /*   - a Posix mutex */
+#if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
+        pthread_cond_t cond;            /*   - a Posix condition */
+#else
+        int fildes[2];                  /*   - Ceci n'est pas une pipe! */
+#endif
+        Boolean flag;                   /*   - and a flag */
+    } wait;
+    struct overflow_t {                 /* - overflow events: */
+        Boolean flag;                   /*   - to indicate an overflow */
+        UInt64 counter;                 /*   - overflow counter */
+    } ovfl;
+};
 static Boolean EnqueueElement(CANQUE_MsgQueue_t queue, const void *element);
 static Boolean DequeueElement(CANQUE_MsgQueue_t queue, void *element);
 
@@ -88,11 +110,11 @@ CANQUE_MsgQueue_t CANQUE_Create(size_t numElem, size_t elemSize) {
     CANQUE_MsgQueue_t msgQueue = NULL;
 
     MACCAN_DEBUG_CORE("        - Message queue for %u elements of size %u bytes\n", numElem, elemSize);
-    if ((msgQueue = (CANQUE_MsgQueue_t)malloc(sizeof(struct msg_queue_t_))) == NULL) {
+    if ((msgQueue = (CANQUE_MsgQueue_t)malloc(sizeof(struct msg_queue_tag))) == NULL) {
         MACCAN_DEBUG_ERROR("+++ Unable to create message queue (NULL pointer)\n");
         return NULL;
     }
-    bzero(msgQueue, sizeof(struct msg_queue_t_));
+    bzero(msgQueue, sizeof(struct msg_queue_tag));
     if ((msgQueue->queueElem = calloc(numElem, elemSize))) {
 #if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
         /* message queue with Posix wait condition */
