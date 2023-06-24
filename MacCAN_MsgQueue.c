@@ -119,11 +119,11 @@ CANQUE_MsgQueue_t CANQUE_Create(size_t numElem, size_t elemSize) {
 #if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
         /* message queue with Posix wait condition */
         if ((pthread_mutex_init(&msgQueue->wait.mutex, NULL) == 0) &&
-            (pthread_cond_init(&msgQueue->wait.cond, NULL)) == 0)
+            (pthread_cond_init(&msgQueue->wait.cond, NULL) == 0))
 #else
-        /* message queue with pipe: "Ceci n'est pas une pipe." */
+        /* message queue with pipe: "Ceci n'est pas une pipe!" */
         if ((pthread_mutex_init(&msgQueue->wait.mutex, NULL) == 0) &&
-            (pipe(msgQueue->wait.fildes)) >= 0)
+            (pipe(msgQueue->wait.fildes) >= 0))
 #endif
         {
             msgQueue->elemSize = (size_t)elemSize;
@@ -149,13 +149,13 @@ CANQUE_Return_t CANQUE_Destroy(CANQUE_MsgQueue_t msgQueue) {
     if (msgQueue) {
 #if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)
         /* destroy the wait condition */
-        pthread_cond_destroy(&msgQueue->wait.cond);
+        (void)pthread_cond_destroy(&msgQueue->wait.cond);
 #else
         /* close pipe file decriptors */
-        close(msgQueue->wait.fildes[PIPO]);
-        close(msgQueue->wait.fildes[PIPI]);
+        (void)close(msgQueue->wait.fildes[PIPO]);
+        (void)close(msgQueue->wait.fildes[PIPI]);
 #endif
-        pthread_mutex_destroy(&msgQueue->wait.mutex);
+        (void)pthread_mutex_destroy(&msgQueue->wait.mutex);
         if (msgQueue->queueElem)
             free(msgQueue->queueElem);
         free(msgQueue);

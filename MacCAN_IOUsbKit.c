@@ -189,11 +189,11 @@ CANUSB_Return_t CANUSB_Initialize(void) {
         bzero(&usbDevice[index], sizeof(USBDevice_t));
         usbDevice[index].fPresent = false;
         /* create a mutex for each device */
-        if(pthread_mutex_init(&usbDevice[index].ptMutex, NULL) < 0)
+        if (pthread_mutex_init(&usbDevice[index].ptMutex, NULL) != 0)
             goto error_initialize;
     }
     /* create a mutex and a thread for the driver */
-    if (pthread_mutex_init(&usbDriver.ptMutex, NULL) < 0)
+    if (pthread_mutex_init(&usbDriver.ptMutex, NULL) != 0)
         goto error_initialize;
     if (pthread_attr_init(&attr) != 0)
         goto error_initialize;
@@ -268,7 +268,7 @@ CANUSB_Return_t CANUSB_Teardown(void) {
             MACCAN_DEBUG_CORE("      - Device #%i: %s", index, usbDevice[index].szName);
             if (usbDevice[index].usbInterface.fOpened) {
                 /* close the USB interface interface(s) */
-                if(usbDevice[index].usbInterface.ioInterface) {
+                if (usbDevice[index].usbInterface.ioInterface) {
                     MACCAN_DEBUG_CODE(0, "close and release I/O interface\n");
                     (void)(*usbDevice[index].usbInterface.ioInterface)->USBInterfaceClose(usbDevice[index].usbInterface.ioInterface);
                     (void)(*usbDevice[index].usbInterface.ioInterface)->Release(usbDevice[index].usbInterface.ioInterface);
@@ -444,15 +444,15 @@ CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle) {
     if (usbDevice[handle].fPresent) {
         if (usbDevice[handle].usbInterface.fOpened) {
             /* close the USB interface interface(s) */
-            if(usbDevice[handle].usbInterface.ioInterface) {
+            if (usbDevice[handle].usbInterface.ioInterface) {
                 MACCAN_DEBUG_CODE(0, "close and release I/O interface\n");
                 kr = (*usbDevice[handle].usbInterface.ioInterface)->USBInterfaceClose(usbDevice[handle].usbInterface.ioInterface);
-                if(kIOReturnSuccess != kr) {
+                if (kIOReturnSuccess != kr) {
                     MACCAN_DEBUG_ERROR("+++ Unable to close I/O interface of device #%i: %08x\n", handle, kr);
                     // TODO: how to handle this?
                 }
                 kr = (*usbDevice[handle].usbInterface.ioInterface)->Release(usbDevice[handle].usbInterface.ioInterface);
-                if(kIOReturnSuccess != kr) {
+                if (kIOReturnSuccess != kr) {
                     MACCAN_DEBUG_ERROR("+++ Unable to release I/O interface of device #%i: %08x\n", handle, kr);
                     // TODO: how to handle this?
                 }
@@ -462,7 +462,7 @@ CANUSB_Return_t CANUSB_CloseDevice(CANUSB_Handle_t handle) {
             if (usbDevice[handle].ioDevice) {
                 MACCAN_DEBUG_CODE(0, "close I/O device\n");
                 kr = (*usbDevice[handle].ioDevice)->USBDeviceClose(usbDevice[handle].ioDevice);
-                if(kIOReturnSuccess != kr) {
+                if (kIOReturnSuccess != kr) {
                     MACCAN_DEBUG_ERROR("+++ Unable to close I/O device #%i: %08x\n", handle, kr);
                     LEAVE_CRITICAL_SECTION(handle);
                     MACCAN_DEBUG_FUNC("unlocked\n");
@@ -741,7 +741,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
     UInt64 length = (UInt64)arg0;
     IOReturn kr;
 
-    switch(result)
+    switch (result)
     {
     case kIOReturnSuccess:
         if (asyncPipe) {
@@ -1548,7 +1548,7 @@ CANUSB_Return_t CANUSB_GetInterfaceEndpointDirection(CANUSB_Handle_t handle, UIn
         (usbDevice[handle].usbInterface.ioInterface != NULL)) {
         kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
                 index, &direction, &number, &transferType, &maxPacketSize, &interval);
-        if(kIOReturnSuccess != kr2) {
+        if (kIOReturnSuccess != kr2) {
             MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
             ret = CANUSB_ERROR_RESOURCE;
         } else {
@@ -1591,7 +1591,7 @@ CANUSB_Return_t CANUSB_GetInterfaceEndpointTransferType(CANUSB_Handle_t handle, 
         (usbDevice[handle].usbInterface.ioInterface != NULL)) {
         kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
                 index, &direction, &number, &transferType, &maxPacketSize, &interval);
-        if(kIOReturnSuccess != kr2) {
+        if (kIOReturnSuccess != kr2) {
             MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
             ret = CANUSB_ERROR_RESOURCE;
         } else {
@@ -1634,7 +1634,7 @@ CANUSB_Return_t CANUSB_GetInterfaceEndpointMaxPacketSize(CANUSB_Handle_t handle,
         (usbDevice[handle].usbInterface.ioInterface != NULL)) {
         kr2 = (*usbDevice[handle].usbInterface.ioInterface)->GetPipeProperties(usbDevice[handle].usbInterface.ioInterface,
                 index, &direction, &number, &transferType, &maxPacketSize, &interval);
-        if(kIOReturnSuccess != kr2) {
+        if (kIOReturnSuccess != kr2) {
             MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%i (%08x)\n", index, kr2);
             ret = CANUSB_ERROR_RESOURCE;
         } else {
@@ -1679,16 +1679,16 @@ static Boolean GetStringFromIndex(IOUSBDeviceInterface **dev, UInt8 idx, char *s
     request.wLength       = (UInt16)MAX_STRING_LENGTH;
 
     kr = (*dev)->DeviceRequest(dev, &request);
-    if(kIOReturnSuccess != kr) {
+    if (kIOReturnSuccess != kr) {
         MACCAN_DEBUG_ERROR("+++ Unable to request the string at index #%i (%08x)\n", idx, kr);
         return false;
     }
-    if(str == NULL || n == 0 || request.wLenDone <= 2) {
+    if (str == NULL || n == 0 || request.wLenDone <= 2) {
         return true;
     }
     CFStringRef cfstr = CFStringCreateWithBytes(NULL, (const UInt8 *)buffer+2, request.wLenDone-2, kCFStringEncodingUTF16LE, false);
     CFIndex     len   = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfstr), kCFStringEncodingUTF8) + 1;
-    if(len >= 0) {
+    if (len >= 0) {
         CFStringGetCString(cfstr, buffer, len, kCFStringEncodingUTF8);
         strncpy(str, buffer, n);
         str[n-1] = '\0';
@@ -1793,7 +1793,7 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
     int index, found;
     const CANDEV_Device_t * canDevice;
 
-    while((service = IOIteratorNext(iterator)))
+    while ((service = IOIteratorNext(iterator)))
     {
         /* Get the USB device's name */
         kr = IORegistryEntryGetName(service, name);
@@ -1804,7 +1804,7 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
         (void)IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plugInInterface, &score);
         /* Release the device object after getting the intermediate plug-in */
         kr = IOObjectRelease(service);
-        if((kIOReturnSuccess != kr) || !plugInInterface)
+        if ((kIOReturnSuccess != kr) || !plugInInterface)
         {
             MACCAN_DEBUG_ERROR("+++ IOCreatePlugInInterfaceForService returned 0x%08x.\n", kr);
             continue;
@@ -1835,7 +1835,7 @@ static void DeviceAdded(void *refCon, io_iterator_t iterator)
         /* look for a free entry in the device list */
         for (index = 0, found = 0; (index < CANUSB_MAX_DEVICES) && !found; index++) {
             ENTER_CRITICAL_SECTION(index);
-            if(!usbDevice[index].fPresent) {
+            if (!usbDevice[index].fPresent) {
                 MACCAN_DEBUG_CORE("      - Device #%i: %s\n", index, name);
                 MACCAN_DEBUG_CORE("        - Properties: vendor = %03x, product = %03x, release = %04x, speed = %d\n",
                                              vendor, product, release, speed);
@@ -1878,7 +1878,7 @@ static void DeviceRemoved(void *refCon, io_iterator_t iterator)
     CFTypeRef       locationCF;
     int index;
 
-    while((object = IOIteratorNext(iterator)))
+    while ((object = IOIteratorNext(iterator)))
     {
         /* Get the location from the i/o registry */
         locationCF = IORegistryEntryCreateCFProperty (object, CFSTR(kUSBDevicePropertyLocationID), kCFAllocatorDefault, 0);
@@ -1989,19 +1989,19 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
     request.bAlternateSetting = kIOUSBFindInterfaceDontCare;
     /* Get an iterator for the interfaces on the device */
     kr = (*device)->CreateInterfaceIterator(device, &request, &iterator);
-    if(kIOReturnSuccess != kr)
+    if (kIOReturnSuccess != kr)
     {
         MACCAN_DEBUG_ERROR("+++ Unable to create interface iterator (%08x)\n", kr);
         return kr;
     }
     kr = kIOReturnError;
-    while((usbInterface = IOIteratorNext(iterator)))
+    while ((usbInterface = IOIteratorNext(iterator)))
     {
         /* Create an intermediate plug-in */
         (void)IOCreatePlugInInterfaceForService(usbInterface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &plugInInterface, &score);
         /* Release the usbInterface object after getting the plug-in */
         kr = IOObjectRelease(usbInterface);
-        if((kIOReturnSuccess != kr) || !plugInInterface)
+        if ((kIOReturnSuccess != kr) || !plugInInterface)
         {
             MACCAN_DEBUG_ERROR("+++ Unable to create a plug-in (%08x)\n", kr);
             break;
@@ -2022,7 +2022,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
         /* Now open the interface. This will cause the pipes associated with */
         /* the endpoints in the interface descriptor to be instantiated */
         kr = (*interface)->USBInterfaceOpen(interface);
-        if(kIOReturnSuccess != kr)
+        if (kIOReturnSuccess != kr)
         {
             MACCAN_DEBUG_ERROR("+++ Unable to open interface (%08x)\n", kr);
             (void)(*interface)->Release(interface);
@@ -2030,7 +2030,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
         }
         /* Get the number of endpoints associated with this interface */
         kr = (*interface)->GetNumEndpoints(interface, &interfaceNumEndpoints);
-        if(kIOReturnSuccess != kr)
+        if (kIOReturnSuccess != kr)
         {
             MACCAN_DEBUG_ERROR("+++ Unable to get number of endpoints (%08x)\n", kr);
             (void)(*interface)->USBInterfaceClose(interface);
@@ -2043,7 +2043,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
         /* Access each pipe in turn, starting with the pipe at index 1 */
         /* The pipe at index 0 is the default control pipe and should */
         /* be accessed using (*usbDevice)->DeviceRequest() instead */
-        for(pipeRef = 1; pipeRef <= interfaceNumEndpoints; pipeRef++)
+        for (pipeRef = 1; pipeRef <= interfaceNumEndpoints; pipeRef++)
         {
             IOReturn        kr2;
             UInt8           direction;
@@ -2054,7 +2054,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
             char            *message;
 
             kr2 = (*interface)->GetPipeProperties(interface, pipeRef, &direction, &number, &transferType, &maxPacketSize, &interval);
-            if(kIOReturnSuccess != kr2)
+            if (kIOReturnSuccess != kr2)
                 MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%d (%08x)\n", pipeRef, kr2);
             else
             {
