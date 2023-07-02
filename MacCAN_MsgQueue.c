@@ -84,11 +84,11 @@
 struct msg_queue_tag {                  /* Message Queue (w/ elements of user-defined size): */
     UInt32 size;                        /* - total number of ring-buffer elements */
     UInt32 used;                        /* - number of used ring-buffer elements */
-    UInt32 high;                        /* - maximum fill rate of the ring-buffer */
+    UInt32 high;                        /* - highest level of the ring-buffer */
     UInt32 head;                        /* - read position of the ring-buffer */
     UInt32 tail;                        /* - write position of the ring-buffer */
     UInt8 *queueElem;                   /* - the ring-buffer itself */
-    size_t elemSize;                    /* - size of an element */
+    size_t elemSize;                    /* - size of one element */
     struct cond_wait_t {                /* - blocking operation: */
         pthread_mutex_t mutex;          /*   - a Posix mutex */
 #if (OPTION_MACCAN_FILE_DESCRIPTOR == 0)

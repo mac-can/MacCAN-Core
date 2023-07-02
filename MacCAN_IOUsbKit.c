@@ -77,7 +77,7 @@
 
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     5
-#define VERSION_PATCH     0
+#define VERSION_PATCH     99
 #define SVN_REVISION     "$Rev$"
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
@@ -2145,7 +2145,7 @@ static void* WorkerThread(void* arg)
     MACCAN_DEBUG_ERROR("+++ Oops, something went terribly wrong!\a\n");
 #else
     /* indicate to the creator that the thread is terminated */
-    MACCAN_DEBUG_CORE("    - So long, and thanks for all the fish.\n");
+    MACCAN_DEBUG_CORE("    - So long, and thanks for all the fish!\n");
 #endif
     assert(0 == pthread_mutex_lock(&usbDriver.ptMutex));
     usbDriver.fRunning = FALSE;
