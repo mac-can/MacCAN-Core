@@ -211,7 +211,7 @@ CANQUE_Return_t CANQUE_Enqueue(CANQUE_MsgQueue_t msgQueue, void const *message) 
 #endif
             retVal = CANUSB_SUCCESS;
         } else {
-            retVal = CANUSB_ERROR_FULL;
+            retVal = CANUSB_ERROR_OVERRUN;
         }
         LEAVE_CRITICAL_SECTION(msgQueue);
     } else {

@@ -62,8 +62,9 @@
 #define CANUSB_ERROR_reserved  (-91)
 #define CANUSB_ERROR_RESOURCE  (-90)
 #define CANUSB_ERROR_TIMEOUT   (-50)
+#define CANUSB_ERROR_OVERRUN   (-40)
 #define CANUSB_ERROR_EMPTY     (-30)
-#define CANUSB_ERROR_FULL      (-20)
+#define CANUSB_ERROR_BUSY      (-20)
 #define CANUSB_ERROR_OK          (0)
 /* MacCAN specific error codes */
 #define CANUSB_ERROR_STALLED   (-51)
