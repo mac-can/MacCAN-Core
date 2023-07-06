@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2021 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -65,6 +65,8 @@
 #define CANUSB_ERROR_EMPTY     (-30)
 #define CANUSB_ERROR_FULL      (-20)
 #define CANUSB_ERROR_OK          (0)
+/* MacCAN specific error codes */
+#define CANUSB_ERROR_STALLED   (-51)
 #define CANUSB_SUCCESS  CANUSB_ERROR_OK
 
 /* CAN API V3 compatible board states */

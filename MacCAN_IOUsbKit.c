@@ -115,7 +115,7 @@ static IOReturn ConfigureDevice(IOUSBDeviceInterface **dev);
 static IOReturn FindInterface(IOUSBDeviceInterface **device, int index);
 static void* WorkerThread(void* arg);
 
-typedef struct usb_buffer_t_ {              /* Double buffer: */
+typedef struct usb_buffer_tag {             /* Double buffer: */
     UInt8 *data[2];                         /*   pointer to data buffers */
     UInt8 index;                            /*   index to active data buffer */
     UInt32 size;                            /*   size of each buffer (in byte) */
@@ -130,7 +130,7 @@ typedef struct usb_async_pipe_tag {         /* Asynchrounous pipe: */
     Boolean running;                        /*   flag to indicate the pipe state */
 } *CANUSB_AsyncPipe_t;                      /*   note: forward declaration requires C11 */
 
-typedef struct usb_interface_t_ {           /* USB interface: */
+typedef struct usb_interface_tag {          /* USB interface: */
     Boolean fOpened;                        /*   interface is opened */
     UInt8 u8Class;                          /*   class of the interface (8-bit) */
     UInt8 u8SubClass;                       /*   subclass of the interface (8-bit) */
@@ -141,7 +141,7 @@ typedef struct usb_interface_t_ {           /* USB interface: */
     CANUSB_Context_t refDeviceRemoved;      /*   pointer to user context for callback */
 } USBInterface_t;
 
-typedef struct usb_device_t_ {              /* USB device: */
+typedef struct usb_device_tag {             /* USB device: */
     Boolean fPresent;                       /*   device is present */
     io_name_t szName;                       /*   device name */
     UInt16 u16VendorId;                     /*   vendor ID (16-bit) */
@@ -156,7 +156,7 @@ typedef struct usb_device_t_ {              /* USB device: */
     pthread_mutex_t ptMutex;                /*   pthread mutex for mutual exclusion */
 } USBDevice_t;
 
-typedef struct usb_driver_t_ {              /* USB driver: */
+typedef struct usb_driver_tag {             /* USB driver: */
     Boolean fRunning;                       /*   flag: driver running */
     pthread_t ptThread;                     /*   pthread of the driver */
     pthread_mutex_t ptMutex;                /*   pthread mutex for mutual exclusion */
@@ -551,7 +551,7 @@ CANUSB_Return_t CANUSB_ReadPipe(CANUSB_Handle_t handle, UInt8 pipeRef, void *buf
             MACCAN_DEBUG_ERROR("+++ Unable to read pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
             MACCAN_DEBUG_FUNC("unlocked\n");
-            return CANUSB_ERROR_RESOURCE;
+            return (kIOUSBTransactionTimeout != kr) ? CANUSB_ERROR_RESOURCE : CANUSB_ERROR_TIMEOUT;
         }
     } else {
         MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
@@ -592,7 +592,7 @@ CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const vo
             MACCAN_DEBUG_ERROR("+++ Unable to get status of pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
             MACCAN_DEBUG_FUNC("unlocked\n");
-            return CANUSB_ERROR_RESOURCE;
+            return (kIOUSBPipeStalled != kr) ? CANUSB_ERROR_RESOURCE : CANUSB_ERROR_STALLED;
         }
 #if (OPTION_MACCAN_PIPE_TIMEOUT == 0)
         /* note: deactivate define if WritePipeTO() is not available in IOUSBInterfaceStructXYZ for the device. */
@@ -611,7 +611,7 @@ CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, const vo
             MACCAN_DEBUG_ERROR("+++ Unable to write pipe #%d (%08x)\n", pipeRef, kr);
             LEAVE_CRITICAL_SECTION(handle);
             MACCAN_DEBUG_FUNC("unlocked\n");
-            return CANUSB_ERROR_FULL;
+            return (kIOUSBTransactionTimeout != kr) ? CANUSB_ERROR_RESOURCE : CANUSB_ERROR_TIMEOUT;
         }
     } else {
         MACCAN_DEBUG_ERROR("+++ Sorry, device #%i is not opened or not available\n", handle);
