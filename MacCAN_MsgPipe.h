@@ -2,7 +2,7 @@
 /*
  *  MacCAN - macOS User-Space Driver for USB-to-CAN Interfaces
  *
- *  Copyright (c) 2012-2021 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
+ *  Copyright (c) 2012-2023 Uwe Vogt, UV Software, Berlin (info@mac-can.com)
  *  All rights reserved.
  *
  *  This file is part of MacCAN-Core.
@@ -50,9 +50,7 @@
 
 #include "MacCAN_Common.h"
 
-typedef struct msg_pipe_t_ {
-    int fildes[2];
-} *CANPIP_MsgPipe_t;
+typedef struct msg_pipe_tag *CANPIP_MsgPipe_t;
 
 typedef int CANPIP_Return_t;
 
