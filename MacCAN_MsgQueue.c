@@ -290,6 +290,20 @@ CANQUE_Return_t CANQUE_Reset(CANQUE_MsgQueue_t msgQueue) {
     return retVal;
 }
 
+Boolean CANQUE_IsEmpty(CANQUE_MsgQueue_t msgQueue) {
+    if (msgQueue)
+        return (msgQueue->used == 0U) ? true : false;
+    else
+        return false;
+}
+
+Boolean CANQUE_IsFull(CANQUE_MsgQueue_t msgQueue) {
+    if (msgQueue)
+        return (msgQueue->used >= msgQueue->size) ? true : false;
+    else
+        return true;
+}
+
 Boolean CANQUE_OverflowFlag(CANQUE_MsgQueue_t msgQueue) {
     if (msgQueue)
         return msgQueue->ovfl.flag;
@@ -304,18 +318,25 @@ UInt64 CANQUE_OverflowCounter(CANQUE_MsgQueue_t msgQueue) {
         return 0U;
 }
 
+UInt32 CANQUE_QueueCount(CANQUE_MsgQueue_t msgQueue) {
+    if (msgQueue)
+        return msgQueue->used;
+    else
+        return 0U;
+}
+
 UInt32 CANQUE_QueueSize(CANQUE_MsgQueue_t msgQueue) {
     if (msgQueue)
         return msgQueue->size;
     else
-        return 0U;;
+        return 0U;
 }
 
 UInt32 CANQUE_QueueHigh(CANQUE_MsgQueue_t msgQueue) {
     if (msgQueue)
         return msgQueue->high;
     else
-        return 0U;;
+        return 0U;
 }
 
 /*  ---  FIFO  ---

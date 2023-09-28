@@ -77,7 +77,7 @@
 
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     5
-#define VERSION_PATCH     99
+#define VERSION_PATCH     0
 #define SVN_REVISION     "$Rev$"
 
 /*#define OPTION_MACCAN_MULTICHANNEL  0  !* set globally: 0 = only one channel on multi-channel devices */
@@ -859,8 +859,8 @@ CANUSB_Return_t CANUSB_AbortPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
     /* must be a valid handle */
     if (!IS_HANDLE_VALID(asyncPipe->handle))
         return CANUSB_ERROR_HANDLE;
-    /* must not be running */
-    //if (asyncPipe->running)
+    /* must be running */
+    //if (!asyncPipe->running)
     //    return CANUSB_ERROR_RESOURCE;
 
     MACCAN_DEBUG_FUNC("lock #%i (%u)\n", asyncPipe->handle, asyncPipe->pipeRef);

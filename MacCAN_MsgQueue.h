@@ -74,9 +74,15 @@ extern CANQUE_Return_t CANQUE_Reset(CANQUE_MsgQueue_t msgQueue);
 extern int CANQUE_FileDescriptor(CANQUE_MsgQueue_t msgQueue);
 #endif
 
+extern Boolean CANQUE_IsEmpty(CANQUE_MsgQueue_t msgQueue);
+
+extern Boolean CANQUE_IsFull(CANQUE_MsgQueue_t msgQueue);
+
 extern Boolean CANQUE_OverflowFlag(CANQUE_MsgQueue_t msgQueue);
 
 extern UInt64 CANQUE_OverflowCounter(CANQUE_MsgQueue_t msgQueue);
+
+extern UInt32 CANQUE_QueueCount(CANQUE_MsgQueue_t msgQueue);
 
 extern UInt32 CANQUE_QueueSize(CANQUE_MsgQueue_t msgQueue);
 
