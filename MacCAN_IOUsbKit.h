@@ -107,7 +107,7 @@ typedef void *CANUSB_Descriptor_t;
 typedef void *CANUSB_Context_t;
 
 typedef void (*CANUSB_DetachedCbk_t)(CANUSB_Context_t refCon);
-typedef void (*CANUSB_AsyncPipeCbk_t)(CANUSB_Context_t refCon, UInt8 *buffer, UInt32 nbyte);
+typedef int (*CANUSB_AsyncPipeCbk_t)(CANUSB_Context_t refCon, UInt8 *buffer, UInt32 nbyte);
 
 typedef struct usb_async_pipe_tag *CANUSB_AsyncPipe_t;
 
@@ -133,7 +133,7 @@ extern CANUSB_Return_t CANUSB_WritePipe(CANUSB_Handle_t handle, UInt8 pipeRef, c
 
 extern CANUSB_Return_t CANUSB_ResetPipe(CANUSB_Handle_t handle, UInt8 pipeRef);
 
-extern CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef, size_t bufferSize);
+extern CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef, size_t bufferSize, Boolean doubleBuffer);
 
 extern CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe);
 
@@ -141,6 +141,8 @@ extern CANUSB_Return_t CANUSB_AbortPipeAsync(CANUSB_AsyncPipe_t asyncPipe);
 
 extern CANUSB_Return_t CANUSB_ReadPipeAsync(CANUSB_AsyncPipe_t asyncPipe, CANUSB_AsyncPipeCbk_t callback, CANUSB_Context_t context);
 
+extern CANUSB_Return_t CANUSB_WritePipeAsync(CANUSB_AsyncPipe_t asyncPipe, const void *buffer, UInt32 size, UInt16 timeout,
+                                                                           CANUSB_AsyncPipeCbk_t callback, CANUSB_Context_t context);
 extern Boolean CANUSB_IsPipeAsyncRunning(CANUSB_AsyncPipe_t asyncPipe);
 
 extern CANUSB_Index_t CANUSB_GetFirstDevice(void);
@@ -191,6 +193,8 @@ extern Boolean CANUSB_IsDeviceOpened(CANUSB_Index_t index);
 #define CANUSB_Callback_t  CANUSB_AsyncPipeCbk_t
 #define CANUSB_ReadPipeAsyncStart  CANUSB_ReadPipeAsync
 #define CANUSB_ReadPipeAsyncAbort  CANUSB_AbortPipeAsync
+#define CANUSB_WritePipeAsyncStart  CANUSB_WritePipeAsync
+#define CANUSB_WritePipeAsyncAbort  CANUSB_AbortPipeAsync
 #define CANUSB_GetDeviceName  CANUSB_GetDeviceUsbName
 
 #ifdef __cplusplus

@@ -67,7 +67,8 @@
 #define CANUSB_ERROR_BUSY      (-20)
 #define CANUSB_ERROR_OK          (0)
 /* MacCAN specific error codes */
-#define CANUSB_ERROR_STALLED   CANUSB_ERROR_BUSY
+#define CANUSB_ERROR_STALLED   (-21) // TX_STUCK
+#define CANUSB_ERROR_FULL      CANUSB_ERROR_OVERRUN
 #define CANUSB_SUCCESS         CANUSB_ERROR_OK
 
 /* CAN API V3 compatible board states */
