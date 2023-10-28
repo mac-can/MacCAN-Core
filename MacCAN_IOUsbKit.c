@@ -55,6 +55,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include <mach/mach.h>
 #include <mach/clock.h>
@@ -135,6 +136,7 @@ typedef struct usb_async_pipe_tag {         /* Asynchrounous pipe: */
     UInt32 completionTimeout;               /*   time-out (in [ms]) if the entire request is not completed */
 #endif
     Boolean running;                        /*   flag to indicate the pipe state */
+    UInt64 serviced;                        /*   counting callbacks (for debugging) */
 } *CANUSB_AsyncPipe_t;                      /*   note: forward declaration requires C11 */
 
 typedef struct usb_interface_tag {          /* USB interface: */
@@ -695,14 +697,14 @@ CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef,
 
     /* create asynchronous pipe context */
     if ((asyncPipe = (CANUSB_AsyncPipe_t)malloc(sizeof(struct usb_async_pipe_tag))) == NULL) {
-        MACCAN_DEBUG_ERROR("+++ Unable to create asynchronous pipe context for endpoint #%u\n", pipeRef);
+        MACCAN_DEBUG_ERROR("+++ Unable to create asynchronous context for pipe #%u\n", pipeRef);
         return NULL;
     }
     bzero(asyncPipe, sizeof(struct usb_async_pipe_tag));
     asyncPipe->handle = CANUSB_INVALID_HANDLE;
     /* create buffer for USB data transfer */
     if (doubleBuffer) {
-        MACCAN_DEBUG_CORE("        - Double buffer each of size %u bytes for endpoint #%u\n", bufferSize, pipeRef);
+        MACCAN_DEBUG_CORE("        - Double buffer each of size %u bytes for pipe #%u\n", bufferSize, pipeRef);
         if ((asyncPipe->buffer.data[0] = malloc(bufferSize)) &&
             (asyncPipe->buffer.data[1] = malloc(bufferSize))) {
             asyncPipe->buffer.size = (UInt32)bufferSize;
@@ -711,12 +713,12 @@ CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef,
             asyncPipe->pipeRef = pipeRef;
             asyncPipe->handle = handle;
         } else {
-            MACCAN_DEBUG_ERROR("+++ Unable to create double buffer (2 * %u bytes) for endpoint #%u\n", bufferSize, pipeRef);
+            MACCAN_DEBUG_ERROR("+++ Unable to create double buffer (2 * %u bytes) for pipe #%u\n", bufferSize, pipeRef);
             free(asyncPipe);
             asyncPipe = NULL;
         }
     } else {
-        MACCAN_DEBUG_CORE("        - Single buffer of size %u bytes for endpoint #%u\n", bufferSize, pipeRef);
+        MACCAN_DEBUG_CORE("        - Single buffer of size %u bytes for pipe #%u\n", bufferSize, pipeRef);
         if ((asyncPipe->buffer.data[0] = malloc(bufferSize))) {
             asyncPipe->buffer.size = (UInt32)bufferSize;
             asyncPipe->buffer.data[1] = NULL;
@@ -725,7 +727,7 @@ CANUSB_AsyncPipe_t CANUSB_CreatePipeAsync(CANUSB_Handle_t handle, UInt8 pipeRef,
             asyncPipe->pipeRef = pipeRef;
             asyncPipe->handle = handle;
         } else {
-            MACCAN_DEBUG_ERROR("+++ Unable to create single buffer (1 * %u bytes) for endpoint #%u\n", bufferSize, pipeRef);
+            MACCAN_DEBUG_ERROR("+++ Unable to create single buffer (1 * %u bytes) for pipe #%u\n", bufferSize, pipeRef);
             free(asyncPipe);
             asyncPipe = NULL;
         }
@@ -748,6 +750,7 @@ CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
     if (asyncPipe->running)
         (void)CANUSB_AbortPipeAsync(asyncPipe);
 
+    MACCAN_DEBUG_CORE("    %8" PRIu64 " notification(s) of pipe #%u serviced\n", asyncPipe->serviced, asyncPipe->pipeRef);
     /* free buffer(s) and asynchronous pipe context */
     if (asyncPipe->buffer.data[1])
         free(asyncPipe->buffer.data[1]);
@@ -760,22 +763,32 @@ CANUSB_Return_t CANUSB_DestroyPipeAsync(CANUSB_AsyncPipe_t asyncPipe) {
 
 static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
     CANUSB_AsyncPipe_t asyncPipe = (CANUSB_AsyncPipe_t)refCon;
+    UInt64 length = (arg0) ? (UInt64)arg0 : 0U;
     UInt8 *buffer, index;
-    UInt64 length = (UInt64)arg0;
     IOReturn kr;
 
     switch (result)
     {
     case kIOReturnSuccess:
         if (asyncPipe) {
-            if (!IS_HANDLE_VALID(asyncPipe->handle))
+            asyncPipe->serviced++;
+            /* sanity check */
+            if (!IS_HANDLE_VALID(asyncPipe->handle)) {
+                asyncPipe->running = false;
                 return;
-            if (!usbDevice[asyncPipe->handle].usbInterface.ioInterface)
+            }
+            if (!usbDevice[asyncPipe->handle].usbInterface.ioInterface) {
+                asyncPipe->running = false;
                 return;
-            if (!asyncPipe->buffer.data[0] || !asyncPipe->buffer.data[1])
+            }
+            if (!asyncPipe->buffer.data[0] || !asyncPipe->buffer.data[1]) {
+                asyncPipe->running = false;
                 return;
-            if (asyncPipe->buffer.index >= 2)
+            }
+            if (asyncPipe->buffer.index >= 2) {
+                asyncPipe->running = false;
                 return;
+            }
             /* double-buffer strategy */
             index = asyncPipe->buffer.index;
             buffer = asyncPipe->buffer.data[index];
@@ -796,6 +809,8 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
             if (asyncPipe->callback && length) {
                 (void)asyncPipe->callback(asyncPipe->context, buffer, (UInt32)length);
             }
+        } else {
+            MACCAN_DEBUG_ERROR("+++ Error: read async pipe without context (%08x)\n", result);
         }
         break;
     case kIOReturnAborted:
@@ -803,7 +818,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
             MACCAN_DEBUG_CORE("!!! Aborted: read async pipe #%d of device #%d (%08x)\n", asyncPipe->pipeRef, asyncPipe->handle, result);
             asyncPipe->running = false;
         } else {
-            MACCAN_DEBUG_CORE("!!! Aborted: read async pipe #%d of device #%d (%08x)\n", 0, CANUSB_INVALID_HANDLE, result);
+            MACCAN_DEBUG_CORE("!!! Aborted: read async pipe without context (%08x)\n", result);
         }
         break;
     default:
@@ -811,7 +826,7 @@ static void ReadPipeCallback(void *refCon, IOReturn result, void *arg0) {
             MACCAN_DEBUG_ERROR("+++ Error: read async pipe #%d of device #%d (%08x)\n", asyncPipe->pipeRef, asyncPipe->handle, result);
             asyncPipe->running = false;
         } else {
-            MACCAN_DEBUG_ERROR("+++ Error: read async pipe #%d of device #%d (%08x)\n", 0, CANUSB_INVALID_HANDLE, result);
+            MACCAN_DEBUG_ERROR("+++ Error: read async pipe without context (%08x)\n", result);
         }
         break;
     }
@@ -913,17 +928,25 @@ static void WritePipeCallback(void *refCon, IOReturn result, void *arg0) {
     IOReturn kr;
 
     (void)arg0;
-    
+
     switch(result)
     {
     case kIOReturnSuccess:
         if (asyncPipe) {
-            if (!IS_HANDLE_VALID(asyncPipe->handle))
+            asyncPipe->serviced++;
+            /* sanity check */
+            if (!IS_HANDLE_VALID(asyncPipe->handle)) {
+                asyncPipe->running = false;
                 return;
-            if (!usbDevice[asyncPipe->handle].usbInterface.ioInterface)
+            }
+            if (!usbDevice[asyncPipe->handle].usbInterface.ioInterface) {
+                asyncPipe->running = false;
                 return;
-            if (!asyncPipe->buffer.data[0])
+            }
+            if (!asyncPipe->buffer.data[0]) {
+                asyncPipe->running = false;
                 return;
+            }
             /* check if there are more data to be sent */
             if (asyncPipe->callback &&
                 asyncPipe->callback(asyncPipe->context, asyncPipe->buffer.data[0], asyncPipe->buffer.size)) {
@@ -965,6 +988,8 @@ static void WritePipeCallback(void *refCon, IOReturn result, void *arg0) {
                 /* no more data to be sent */
                 asyncPipe->running = false;
             }
+        } else {
+            MACCAN_DEBUG_CORE("+++ Error: write async pipe without context (%08x)\n", result);
         }
         break;
     case kIOReturnAborted:
@@ -972,7 +997,7 @@ static void WritePipeCallback(void *refCon, IOReturn result, void *arg0) {
             MACCAN_DEBUG_CORE("!!! Aborted: write async pipe #%d of device #%d (%08x)\n", asyncPipe->pipeRef, asyncPipe->handle, result);
             asyncPipe->running = false;
         } else {
-            MACCAN_DEBUG_CORE("!!! Aborted: write async pipe #%d of device #%d (%08x)\n", 0, CANUSB_INVALID_HANDLE, result);
+            MACCAN_DEBUG_CORE("!!! Aborted: write async pipe without context (%08x)\n", result);
         }
         break;
     default:
@@ -980,7 +1005,7 @@ static void WritePipeCallback(void *refCon, IOReturn result, void *arg0) {
             MACCAN_DEBUG_ERROR("+++ Error: write async pipe #%d of device #%d (%08x)\n", asyncPipe->pipeRef, asyncPipe->handle, result);
             asyncPipe->running = false;
         } else {
-            MACCAN_DEBUG_ERROR("+++ Error: write async pipe #%d of device #%d (%08x)\n", 0, CANUSB_INVALID_HANDLE, result);
+            MACCAN_DEBUG_ERROR("+++ Error: write async pipe without context (%08x)\n", result);
         }
         break;
     }
@@ -2243,7 +2268,8 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
         }
 #if (OPTION_MACCAN_PIPE_INFO != 0)
         MACCAN_DEBUG_CORE("      - Interface class %d, subclass %d, protocol %d\n", interfaceClass, interfaceSubClass, interfaceProtocol);
-        MACCAN_DEBUG_CORE("      - Interface has %d endpoints:\n", interfaceNumEndpoints);
+        MACCAN_DEBUG_CORE("      - Interface has %d pipe(s):\n", interfaceNumEndpoints + 1);
+        MACCAN_DEBUG_CORE("          - Pipe #0: default control pipe (for device requests)\n");
         /* Access each pipe in turn, starting with the pipe at index 1 */
         /* The pipe at index 0 is the default control pipe and should */
         /* be accessed using (*usbDevice)->DeviceRequest() instead */
@@ -2262,7 +2288,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
                 MACCAN_DEBUG_ERROR("+++ Unable to get properties of pipe #%d (%08x)\n", pipeRef, kr2);
             else
             {
-                MACCAN_DEBUG_CORE("          - PipeRef #%d: ", pipeRef);
+                MACCAN_DEBUG_CORE("          - Pipe #%d: ", pipeRef);
                 switch (direction)
                 {
                     case kUSBOut:     message = "out"; break;
@@ -2281,7 +2307,7 @@ static IOReturn FindInterface(IOUSBDeviceInterface **device, int index)
                     case kUSBAnyType:   message = "any"; break;
                     default:            message = "???"; break;
                 }
-                MACCAN_DEBUG_CORE("transfer type %s, max. packet size %d\n", message, maxPacketSize);
+                MACCAN_DEBUG_CORE("transfer type %s, max. packet size %d, interval %ums\n", message, maxPacketSize, interval);
             }
         }
 #endif
